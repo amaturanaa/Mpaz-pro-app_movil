@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 // 'correcta' es el índice de la alternativa buena:
 // 0 = primera; 1 = segunda; 2 = tercera; 3 = cuarta.
 // 'explicacion' se muestra al revisar las respuestas.
-private data class PreguntaPruebaLenguaje(
+private data class PreguntaPruebaCiencias(
     val texto: String,
     val alternativas: List<String>,
     val correcta: Int,
@@ -36,10 +36,10 @@ private data class PreguntaPruebaLenguaje(
 )
 
 // ============================================================
-// PANTALLA PRINCIPAL DE LA PRUEBA DE LENGUAJE.
+// PANTALLA PRINCIPAL DE LA PRUEBA DE Ciencias Naturales.
 // ============================================================
 @Composable
-fun PruebaLenguaje() {
+fun PruebaCiencias() {
     // El contexto permite acceder al almacenamiento de esta app.
     val context = LocalContext.current
 
@@ -47,43 +47,11 @@ fun PruebaLenguaje() {
     // Se mantienen las mismas claves de la versión anterior para
     // NO borrar el historial de notas ni los intentos ya utilizados.
     val preferencias = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje", Context.MODE_PRIVATE)
+        context.getSharedPreferences("prueba_ciencias", Context.MODE_PRIVATE)
     }
 
-    // COMPATIBILIDAD CON VERSIONES ANTERIORES:
-    // Una versión antigua guardaba los intentos con el nombre
-    // "prueba_lenguaje_gerundios". Si todavía existen datos ahí y
-    // NO tenemos datos en el almacenamiento actual, los copiamos.
-    // Así no se pierden los intentos ni las notas ya conseguidas.
-    val preferenciasAntiguas = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje_gerundios", Context.MODE_PRIVATE)
-    }
-    remember(preferencias, preferenciasAntiguas) {
-        val editor = preferencias.edit()
-        var necesitaGuardar = false
-        if (!preferencias.contains("intentos_usados") &&
-            preferenciasAntiguas.contains("intentos_usados")) {
-            editor.putInt(
-                "intentos_usados",
-                preferenciasAntiguas.getInt("intentos_usados", 0)
-            )
-            necesitaGuardar = true
-        }
-        if (!preferencias.contains("historial_notas") &&
-            preferenciasAntiguas.contains("historial_notas")) {
-            editor.putString(
-                "historial_notas",
-                preferenciasAntiguas.getString("historial_notas", "").orEmpty()
-            )
-            necesitaGuardar = true
-        }
-        if (necesitaGuardar) editor.apply()
-        true
-    }
-
-    // Máximo permitido, por defecto tres.
-    // ProfesorScreen.kt comparte este almacenamiento y puede
-    // cambiar "max_intentos" entre 1 y 3.
+    // Máximo permitido, por defecto tres. En una versión futura,
+    // ProfesorScreen podrá configurar esta misma clave.
     var maxIntentos by remember(preferencias) {
         mutableIntStateOf(preferencias.getInt("max_intentos", 3).coerceIn(1, 3))
     }
@@ -105,44 +73,44 @@ fun PruebaLenguaje() {
     }
 
     // ========================================================
-    // BANCO DE PREGUNTAS: contenidos de Lenguaje para segundo básico (Chile).
+    // BANCO DE PREGUNTAS: contenidos de segundo básico (Chile).
     // ========================================================
     val preguntas = remember {
         listOf(
-            // Pregunta 1: reconocer el gerundio de «cantar».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de cantar?",
-                alternativas = listOf("Cantar", "Cantando", "Cantó", "Canta"),
-                correcta = 1,
-                explicacion = "El gerundio de cantar es cantando. Termina en -ando."
-            ),
-            // Pregunta 2: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "La niña está ___ un libro.",
-                alternativas = listOf("Leyendo", "Leer", "Leyó", "Lee"),
-                correcta = 0,
-                explicacion = "Decimos «está leyendo». Leyendo expresa una acción en desarrollo."
-            ),
-            // Pregunta 3: reconocer el gerundio de «correr».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de correr?",
-                alternativas = listOf("Corría", "Corrió", "Corriendo", "Corre"),
+            // Pregunta 1: Ciencias Naturales.
+            PreguntaPruebaCiencias(
+                texto = "¿Cuál de estos animales es vertebrado?",
+                alternativas = listOf("Mariposa", "Caracol", "Perro", "Hormiga"),
                 correcta = 2,
-                explicacion = "El gerundio de correr es corriendo. Termina en -iendo."
+                explicacion = "El perro tiene columna vertebral."
             ),
-            // Pregunta 4: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "Los niños están ___ en el patio.",
-                alternativas = listOf("Jugar", "Jugaron", "Juegan", "Jugando"),
-                correcta = 3,
-                explicacion = "La oración correcta es «Los niños están jugando en el patio»."
-            ),
-            // Pregunta 5: reconocer el gerundio de «escribir».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de escribir?",
-                alternativas = listOf("Escribiendo", "Escribe", "Escribió", "Escribir"),
+            // Pregunta 2: Ciencias Naturales.
+            PreguntaPruebaCiencias(
+                texto = "¿Dónde vive normalmente un pez?",
+                alternativas = listOf("En el agua", "En un árbol", "Bajo la arena", "En un nido"),
                 correcta = 0,
-                explicacion = "El gerundio de escribir es escribiendo. Termina en -iendo."
+                explicacion = "El agua es el hábitat de los peces."
+            ),
+            // Pregunta 3: Ciencias Naturales.
+            PreguntaPruebaCiencias(
+                texto = "¿Cuál es una etapa en la vida de una mariposa?",
+                alternativas = listOf("Piedra", "Oruga", "Semilla", "Raíz"),
+                correcta = 1,
+                explicacion = "La oruga es una etapa del ciclo de vida de la mariposa."
+            ),
+            // Pregunta 4: Ciencias Naturales.
+            PreguntaPruebaCiencias(
+                texto = "¿Qué acción ayuda a cuidar el agua?",
+                alternativas = listOf("Dejar la llave abierta", "Botar basura al río", "Cerrar la llave al cepillarse", "Jugar con la manguera abierta"),
+                correcta = 2,
+                explicacion = "Cerrar la llave evita desperdiciar agua."
+            ),
+            // Pregunta 5: Ciencias Naturales.
+            PreguntaPruebaCiencias(
+                texto = "¿Qué necesitan las plantas para vivir?",
+                alternativas = listOf("Solo piedras", "Agua y luz", "Solo plástico", "Solo juguetes"),
+                correcta = 1,
+                explicacion = "Las plantas necesitan agua y luz para desarrollarse."
             )
         )
     }
@@ -245,13 +213,13 @@ fun PruebaLenguaje() {
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
-                                    text = "Prueba de Lenguaje",
+                                    text = "Prueba de Ciencias Naturales",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = azulOscuro
                                 )
                                 Text(
-                                    text = "Gerundios · Lenguaje y Comunicación",
+                                    text = "Seres vivos, hábitats y agua",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = textoSecundario
                                 )
@@ -358,7 +326,7 @@ fun PruebaLenguaje() {
             // ====================================================
             1 -> {
                 Text(
-                    text = "Prueba de Lenguaje",
+                    text = "Prueba de Ciencias Naturales",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
