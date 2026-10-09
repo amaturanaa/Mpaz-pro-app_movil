@@ -6,33 +6,42 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
+
 import androidx.compose.material3.*
+
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+
 import kotlinx.coroutines.launch
+
+import com.example.mpaz_pro_app_movil.ui.theme.*
+import com.example.mpaz_pro_app_movil.pruebas.PruebaLenguaje
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
-    // Controla la pestaña seleccionada
-    var pestana by remember { mutableStateOf(0) }
+    // Control de la pestaña seleccionada
+    var pestana by remember {
+        mutableIntStateOf(0)
+    }
 
     // Estado del menú lateral
     val drawerState = rememberDrawerState(
         initialValue = DrawerValue.Closed
     )
 
-    // Permite abrir y cerrar el menú
     val scope = rememberCoroutineScope()
 
-    // CONTENEDOR DEL MENÚ LATERAL
+    // MENÚ LATERAL
     ModalNavigationDrawer(
         drawerState = drawerState,
 
@@ -48,12 +57,15 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
                 HorizontalDivider()
 
-                // OPCIÓN: MIS ASIGNATURAS
+                // ASIGNATURAS
                 NavigationDrawerItem(
-                    label = { Text("Mis asignaturas") },
+                    label = {
+                        Text("Mis asignaturas")
+                    },
                     selected = pestana == 0,
                     onClick = {
                         pestana = 0
+
                         scope.launch {
                             drawerState.close()
                         }
@@ -61,12 +73,15 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
 
-                // OPCIÓN: PRUEBAS
+                // PRUEBAS
                 NavigationDrawerItem(
-                    label = { Text("Pruebas") },
+                    label = {
+                        Text("Pruebas")
+                    },
                     selected = pestana == 1,
                     onClick = {
                         pestana = 1
+
                         scope.launch {
                             drawerState.close()
                         }
@@ -74,12 +89,15 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
 
-                // OPCIÓN: MI AVANCE
+                // MI AVANCE
                 NavigationDrawerItem(
-                    label = { Text("Mi avance") },
+                    label = {
+                        Text("Mi avance")
+                    },
                     selected = pestana == 2,
                     onClick = {
                         pestana = 2
+
                         scope.launch {
                             drawerState.close()
                         }
@@ -91,9 +109,11 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                     modifier = Modifier.padding(vertical = 12.dp)
                 )
 
-                // OPCIÓN: CERRAR SESIÓN
+                // CERRAR SESIÓN
                 NavigationDrawerItem(
-                    label = { Text("Cerrar sesión") },
+                    label = {
+                        Text("Cerrar sesión")
+                    },
                     selected = false,
                     onClick = {
                         onCerrarSesion()
@@ -110,8 +130,10 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
             // BARRA SUPERIOR
             topBar = {
+
                 TopAppBar(
                     title = {
+
                         Text(
                             text = when (pestana) {
                                 0 -> "Mis asignaturas"
@@ -121,15 +143,18 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                         )
                     },
 
-                    // BOTÓN DE LAS TRES LÍNEAS
+                    // BOTÓN DEL MENÚ LATERAL
                     actions = {
+
                         IconButton(
                             onClick = {
+
                                 scope.launch {
                                     drawerState.open()
                                 }
                             }
                         ) {
+
                             Icon(
                                 imageVector = Icons.Filled.Menu,
                                 contentDescription = "Abrir menú"
@@ -139,51 +164,73 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                 )
             },
 
-            // BARRA DE NAVEGACIÓN INFERIOR
+            // BARRA INFERIOR
             bottomBar = {
+
                 NavigationBar {
 
+                    // PESTAÑA ASIGNATURAS
                     NavigationBarItem(
                         selected = pestana == 0,
-                        onClick = { pestana = 0 },
+                        onClick = {
+                            pestana = 0
+                        },
+
                         icon = {
                             Icon(
-                                Icons.Filled.Home,
+                                imageVector = Icons.Filled.Home,
                                 contentDescription = "Asignaturas"
                             )
                         },
-                        label = { Text("Asignaturas") }
+
+                        label = {
+                            Text("Asignaturas")
+                        }
                     )
 
+                    // PESTAÑA PRUEBAS
                     NavigationBarItem(
                         selected = pestana == 1,
-                        onClick = { pestana = 1 },
+                        onClick = {
+                            pestana = 1
+                        },
+
                         icon = {
                             Icon(
-                                Icons.Filled.Star,
+                                imageVector = Icons.Filled.Edit,
                                 contentDescription = "Pruebas"
                             )
                         },
-                        label = { Text("Pruebas") }
+
+                        label = {
+                            Text("Pruebas")
+                        }
                     )
 
+                    // PESTAÑA AVANCE
                     NavigationBarItem(
                         selected = pestana == 2,
-                        onClick = { pestana = 2 },
+                        onClick = {
+                            pestana = 2
+                        },
+
                         icon = {
                             Icon(
-                                Icons.Filled.Star,
+                                imageVector = Icons.Filled.Star,
                                 contentDescription = "Avance"
                             )
                         },
-                        label = { Text("Avance") }
+
+                        label = {
+                            Text("Avance")
+                        }
                     )
                 }
             }
 
         ) { innerPadding ->
 
-            // CONTENIDO DE CADA PESTAÑA
+            // CONTENIDO SEGÚN LA PESTAÑA
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -195,14 +242,14 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
                 when (pestana) {
 
+                    // ASIGNATURAS
                     0 -> ContenidoAsignaturas()
 
-                    1 -> Text(
-                        text = "Aquí va la prueba final",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    // PRUEBA DE LENGUAJE
+                    1 -> PruebaLenguaje()
 
-                    else -> Text(
+                    // AVANCE DEL ESTUDIANTE
+                    2 -> Text(
                         text = "Aquí va el avance del estudiante",
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -212,7 +259,11 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
     }
 }
 
+
+// ======================================
 // CONTENIDO DE LAS ASIGNATURAS
+// ======================================
+
 @Composable
 fun ContenidoAsignaturas() {
 
@@ -223,14 +274,30 @@ fun ContenidoAsignaturas() {
         "Historia, Geografía y Ciencias Sociales"
     )
 
-    asignaturas.forEach { asignatura ->
+    // COLORES DE LAS TARJETAS
+    val colores = listOf(
+        RosadoClaro,
+        AzulClaro,
+        VerdeClaro,
+        AmarilloClaro
+    )
+
+    asignaturas.forEachIndexed { indice, asignatura ->
 
         Card(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+
+            colors = CardDefaults.cardColors(
+                containerColor = colores[indice]
+            ),
+
+            shape = RoundedCornerShape(18.dp)
         ) {
+
             Text(
                 text = asignatura,
                 style = MaterialTheme.typography.titleMedium,
+                color = TextoPrincipal,
                 modifier = Modifier.padding(20.dp)
             )
         }
