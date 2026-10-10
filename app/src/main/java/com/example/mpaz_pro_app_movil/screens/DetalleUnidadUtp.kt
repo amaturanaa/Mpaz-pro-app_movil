@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil
+package com.example.mpaz_pro_app_movil.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background

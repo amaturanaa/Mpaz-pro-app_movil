@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.example.mpaz_pro_app_movil.screens.ProfesorScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
 
 class MainActivity : ComponentActivity() {
@@ -11,10 +12,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MPAZ_PRO_APP_MOVILTheme{
-                EstudianteScreen(onCerrarSesion = { })
+            MPAZ_PRO_APP_MOVILTheme {
+                ProfesorScreen(onCerrarSesion = { })
             }
         }
-        //Botón que lleva a ver resultados, ver anotaciones.
     }
 }
