@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
 // 'correcta' es el índice de la alternativa buena:
 // 0 = primera; 1 = segunda; 2 = tercera; 3 = cuarta.
 // 'explicacion' se muestra al revisar las respuestas.
-private data class PreguntaPruebaLenguaje(
+private data class PreguntaPruebaMatematicas(
     val texto: String,
     val alternativas: List<String>,
     val correcta: Int,
@@ -36,10 +36,10 @@ private data class PreguntaPruebaLenguaje(
 )
 
 // ============================================================
-// PANTALLA PRINCIPAL DE LA PRUEBA DE LENGUAJE.
+// PANTALLA PRINCIPAL DE LA PRUEBA DE Matemática.
 // ============================================================
 @Composable
-fun PruebaLenguaje() {
+fun PruebaMatematicas() {
     // El contexto permite acceder al almacenamiento de esta app.
     val context = LocalContext.current
 
@@ -47,43 +47,11 @@ fun PruebaLenguaje() {
     // Se mantienen las mismas claves de la versión anterior para
     // NO borrar el historial de notas ni los intentos ya utilizados.
     val preferencias = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje", Context.MODE_PRIVATE)
+        context.getSharedPreferences("prueba_matematicas", Context.MODE_PRIVATE)
     }
 
-    // COMPATIBILIDAD CON VERSIONES ANTERIORES:
-    // Una versión antigua guardaba los intentos con el nombre
-    // "prueba_lenguaje_gerundios". Si todavía existen datos ahí y
-    // NO tenemos datos en el almacenamiento actual, los copiamos.
-    // Así no se pierden los intentos ni las notas ya conseguidas.
-    val preferenciasAntiguas = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje_gerundios", Context.MODE_PRIVATE)
-    }
-    remember(preferencias, preferenciasAntiguas) {
-        val editor = preferencias.edit()
-        var necesitaGuardar = false
-        if (!preferencias.contains("intentos_usados") &&
-            preferenciasAntiguas.contains("intentos_usados")) {
-            editor.putInt(
-                "intentos_usados",
-                preferenciasAntiguas.getInt("intentos_usados", 0)
-            )
-            necesitaGuardar = true
-        }
-        if (!preferencias.contains("historial_notas") &&
-            preferenciasAntiguas.contains("historial_notas")) {
-            editor.putString(
-                "historial_notas",
-                preferenciasAntiguas.getString("historial_notas", "").orEmpty()
-            )
-            necesitaGuardar = true
-        }
-        if (necesitaGuardar) editor.apply()
-        true
-    }
-
-    // Máximo permitido, por defecto tres.
-    // ProfesorScreen.kt comparte este almacenamiento y puede
-    // cambiar "max_intentos" entre 1 y 3.
+    // Máximo permitido, por defecto tres. En una versión futura,
+    // ProfesorScreen podrá configurar esta misma clave.
     var maxIntentos by remember(preferencias) {
         mutableIntStateOf(preferencias.getInt("max_intentos", 3).coerceIn(1, 3))
     }
@@ -105,44 +73,44 @@ fun PruebaLenguaje() {
     }
 
     // ========================================================
-    // BANCO DE PREGUNTAS: contenidos de Lenguaje para segundo básico (Chile).
+    // BANCO DE PREGUNTAS: contenidos de segundo básico (Chile).
     // ========================================================
     val preguntas = remember {
         listOf(
-            // Pregunta 1: reconocer el gerundio de «cantar».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de cantar?",
-                alternativas = listOf("Cantar", "Cantando", "Cantó", "Canta"),
+            // Pregunta 1: Matemática.
+            PreguntaPruebaMatematicas(
+                texto = "¿Cuánto es 36 + 24?",
+                alternativas = listOf("50", "60", "62", "70"),
                 correcta = 1,
-                explicacion = "El gerundio de cantar es cantando. Termina en -ando."
+                explicacion = "36 + 24 = 60."
             ),
-            // Pregunta 2: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "La niña está ___ un libro.",
-                alternativas = listOf("Leyendo", "Leer", "Leyó", "Lee"),
+            // Pregunta 2: Matemática.
+            PreguntaPruebaMatematicas(
+                texto = "¿Cuánto es 85 - 30?",
+                alternativas = listOf("55", "65", "45", "50"),
                 correcta = 0,
-                explicacion = "Decimos «está leyendo». Leyendo expresa una acción en desarrollo."
+                explicacion = "85 - 30 = 55."
             ),
-            // Pregunta 3: reconocer el gerundio de «correr».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de correr?",
-                alternativas = listOf("Corría", "Corrió", "Corriendo", "Corre"),
-                correcta = 2,
-                explicacion = "El gerundio de correr es corriendo. Termina en -iendo."
+            // Pregunta 3: Matemática.
+            PreguntaPruebaMatematicas(
+                texto = "En el número 74, ¿cuántas decenas hay?",
+                alternativas = listOf("4", "7", "74", "70"),
+                correcta = 1,
+                explicacion = "74 está formado por 7 decenas y 4 unidades."
             ),
-            // Pregunta 4: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "Los niños están ___ en el patio.",
-                alternativas = listOf("Jugar", "Jugaron", "Juegan", "Jugando"),
-                correcta = 3,
-                explicacion = "La oración correcta es «Los niños están jugando en el patio»."
+            // Pregunta 4: Matemática.
+            PreguntaPruebaMatematicas(
+                texto = "¿Qué número sigue en la secuencia 5, 10, 15, 20, ...?",
+                alternativas = listOf("21", "25", "30", "40"),
+                correcta = 1,
+                explicacion = "La secuencia aumenta de 5 en 5."
             ),
-            // Pregunta 5: reconocer el gerundio de «escribir».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de escribir?",
-                alternativas = listOf("Escribiendo", "Escribe", "Escribió", "Escribir"),
-                correcta = 0,
-                explicacion = "El gerundio de escribir es escribiendo. Termina en -iendo."
+            // Pregunta 5: Matemática.
+            PreguntaPruebaMatematicas(
+                texto = "¿Cuántos lados tiene un triángulo?",
+                alternativas = listOf("2", "3", "4", "5"),
+                correcta = 1,
+                explicacion = "Un triángulo tiene 3 lados."
             )
         )
     }
@@ -245,13 +213,13 @@ fun PruebaLenguaje() {
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
-                                    text = "Prueba de Lenguaje",
+                                    text = "Prueba de Matemática",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = azulOscuro
                                 )
                                 Text(
-                                    text = "Gerundios · Lenguaje y Comunicación",
+                                    text = "Números, operaciones y geometría",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = textoSecundario
                                 )
@@ -358,7 +326,7 @@ fun PruebaLenguaje() {
             // ====================================================
             1 -> {
                 Text(
-                    text = "Prueba de Lenguaje",
+                    text = "Prueba de Matemática",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
