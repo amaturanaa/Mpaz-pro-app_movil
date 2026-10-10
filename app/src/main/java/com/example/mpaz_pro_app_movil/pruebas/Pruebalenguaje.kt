@@ -146,7 +146,6 @@ fun PruebaLenguaje() {
                 explicacion = "El gerundio de escribir es escribiendo. Termina en -iendo."
             )
         )
-        return
     }
 
     // Control de pantalla:
