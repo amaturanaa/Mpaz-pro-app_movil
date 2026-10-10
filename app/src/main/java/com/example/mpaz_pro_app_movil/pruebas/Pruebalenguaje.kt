@@ -1,4 +1,3 @@
-
 package com.example.mpaz_pro_app_movil.pruebas
 
 import androidx.compose.foundation.clickable
@@ -11,81 +10,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.util.Locale
+import com.example.mpaz_pro_app_movil.datos.DatosPrueba
 import kotlin.math.roundToInt
 
-// Esta clase sirve para crear preguntas.
-// Cada pregunta tiene un texto, cuatro alternativas
-// y el número de la alternativa correcta.
-private data class Pregunta(
-    val texto: String,
-    val alternativas: List<String>,
-    val correcta: Int
-)
-
 @Composable
-fun PruebaLenguaje() {
+fun PruebaLenguaje(unidadId: Int = 1) {
 
     // =====================================
-    // 1. CREAMOS LAS CINCO PREGUNTAS
+    // 1. TOMAMOS LAS PREGUNTAS DE LA UNIDAD
     // =====================================
 
-    val preguntas = remember {
-        listOf(
-            Pregunta(
-                texto = "¿Cuál es el gerundio de cantar?",
-                alternativas = listOf(
-                    "Cantar",
-                    "Cantando",
-                    "Cantó",
-                    "Canta"
-                ),
-                correcta = 1
-            ),
+    // Las preguntas ya no se escriben aquí: vienen de los datos
+    // compartidos, los mismos que revisa la UTP.
+    val preguntas = remember(unidadId) {
+        DatosPrueba.preguntas.filter { pregunta ->
+            pregunta.unidadId == unidadId && pregunta.esPruebaFinal
+        }
+    }
 
-            Pregunta(
-                texto = "La niña está ___ un libro.",
-                alternativas = listOf(
-                    "Leyendo",
-                    "Leer",
-                    "Leyó",
-                    "Lee"
-                ),
-                correcta = 0
-            ),
-
-            Pregunta(
-                texto = "¿Cuál es el gerundio de correr?",
-                alternativas = listOf(
-                    "Corría",
-                    "Corrió",
-                    "Corriendo",
-                    "Corre"
-                ),
-                correcta = 2
-            ),
-
-            Pregunta(
-                texto = "Los niños están ___ en el patio.",
-                alternativas = listOf(
-                    "Jugar",
-                    "Jugaron",
-                    "Juegan",
-                    "Jugando"
-                ),
-                correcta = 3
-            ),
-
-            Pregunta(
-                texto = "¿Cuál es el gerundio de escribir?",
-                alternativas = listOf(
-                    "Escribiendo",
-                    "Escribe",
-                    "Escribió",
-                    "Escribir"
-                ),
-                correcta = 0
-            )
+    // Si la unidad todavía no tiene preguntas, lo avisamos y no seguimos.
+    if (preguntas.isEmpty()) {
+        Text(
+            text = "Esta unidad todavía no tiene preguntas.",
+            style = MaterialTheme.typography.bodyLarge
         )
+        return
     }
 
     // =====================================
@@ -203,7 +152,7 @@ fun PruebaLenguaje() {
                         )
 
                         Text(
-                            text = "5 preguntas - 5 puntos"
+                            text = "${preguntas.size} preguntas - ${preguntas.size} puntos"
                         )
 
                         Text(
@@ -228,7 +177,7 @@ fun PruebaLenguaje() {
                 )
 
                 Text(
-                    text = "Pregunta ${preguntaActual + 1} de 5"
+                    text = "Pregunta ${preguntaActual + 1} de ${preguntas.size}"
                 )
 
                 // Mostramos el enunciado.
@@ -353,7 +302,7 @@ fun PruebaLenguaje() {
                     ) {
 
                         Text(
-                            text = "Tu puntaje: $puntaje / 5",
+                            text = "Tu puntaje: $puntaje / ${preguntas.size}",
                             style = MaterialTheme.typography.titleMedium
                         )
 
@@ -392,4 +341,3 @@ fun PruebaLenguaje() {
         }
     }
 }
-
