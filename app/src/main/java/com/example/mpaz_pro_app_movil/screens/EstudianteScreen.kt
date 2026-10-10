@@ -56,6 +56,9 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
     //  0 = Lenguaje, 1 = Matemática, 2 = Ciencias, 3 = Historia.
     var pruebaSeleccionada by remember { mutableIntStateOf(-1) }
 
+    // null = no hay ninguna abierta. Si tiene un nombre, se muestra esa unidad.
+    var asignaturaAbierta by remember { mutableStateOf<String?>(null) }
+
     // Controla si el menú lateral está abierto o cerrado.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -213,13 +216,30 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
             ) {
                 when (pestana) {
                     // Pestaña 0: conservamos la pantalla de asignaturas.
-                    0 -> Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp)
-                    ) {
-                        ContenidoAsignaturas()
+                    0 -> {
+                        if (asignaturaAbierta != null) {
+                            // Hacemos esto para asegurarle a kotlin que la
+                            // asignatura abierta tiene un valor
+                            asignaturaAbierta?.let { asignaturaSeleccionada ->
+                                UnidadScreen(
+                                    asignatura = asignaturaSeleccionada,
+                                    onVolver = { asignaturaAbierta = null }
+                                )
+                            }
+
+                        }
+                        else {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(16.dp)
+                            ) {
+                                ContenidoAsignaturas(
+                                    onAbrir = { asignatura -> asignaturaAbierta = asignatura }
+                                )
+                            }
+                        }
                     }
 
                     // Pestaña 1: primero se muestra un listado.
@@ -384,7 +404,7 @@ private fun MenuDePruebas(onElegirPrueba: (Int) -> Unit) {
 // Conservamos la función para no modificar
 // tu diseño actual de las asignaturas.
 @Composable
-fun ContenidoAsignaturas() {
+fun ContenidoAsignaturas(onAbrir: (String) -> Unit) {
 
     // Nombres de las cuatro asignaturas de 2.º básico.
     val asignaturas = listOf(
@@ -407,7 +427,8 @@ fun ContenidoAsignaturas() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 12.dp)
+                .clickable { onAbrir(asignatura) },
             colors = CardDefaults.cardColors(
                 containerColor = colores[indice]
             ),
