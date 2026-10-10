@@ -15,5 +15,6 @@ class MainActivity : ComponentActivity() {
                 EstudianteScreen(onCerrarSesion = { })
             }
         }
+        //Botón que lleva a ver resultados, ver anotaciones.
     }
 }

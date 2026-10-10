@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
-import com.example.mpaz_pro_app_movil.datos.DatosPrueba
 import kotlin.math.roundToInt
 
 // ============================================================
@@ -29,7 +28,7 @@ import kotlin.math.roundToInt
 // 'correcta' es el índice de la alternativa buena:
 // 0 = primera; 1 = segunda; 2 = tercera; 3 = cuarta.
 // 'explicacion' se muestra al revisar las respuestas.
-private data class PreguntaPruebaLenguaje(
+private data class PreguntaPruebaHistoria(
     val texto: String,
     val alternativas: List<String>,
     val correcta: Int,
@@ -37,10 +36,10 @@ private data class PreguntaPruebaLenguaje(
 )
 
 // ============================================================
-// PANTALLA PRINCIPAL DE LA PRUEBA DE LENGUAJE.
+// PANTALLA PRINCIPAL DE LA PRUEBA DE Historia.
 // ============================================================
 @Composable
-fun PruebaLenguaje() {
+fun PruebaHistoria() {
     // El contexto permite acceder al almacenamiento de esta app.
     val context = LocalContext.current
 
@@ -48,43 +47,11 @@ fun PruebaLenguaje() {
     // Se mantienen las mismas claves de la versión anterior para
     // NO borrar el historial de notas ni los intentos ya utilizados.
     val preferencias = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje", Context.MODE_PRIVATE)
+        context.getSharedPreferences("prueba_historia", Context.MODE_PRIVATE)
     }
 
-    // COMPATIBILIDAD CON VERSIONES ANTERIORES:
-    // Una versión antigua guardaba los intentos con el nombre
-    // "prueba_lenguaje_gerundios". Si todavía existen datos ahí y
-    // NO tenemos datos en el almacenamiento actual, los copiamos.
-    // Así no se pierden los intentos ni las notas ya conseguidas.
-    val preferenciasAntiguas = remember(context) {
-        context.getSharedPreferences("prueba_lenguaje_gerundios", Context.MODE_PRIVATE)
-    }
-    remember(preferencias, preferenciasAntiguas) {
-        val editor = preferencias.edit()
-        var necesitaGuardar = false
-        if (!preferencias.contains("intentos_usados") &&
-            preferenciasAntiguas.contains("intentos_usados")) {
-            editor.putInt(
-                "intentos_usados",
-                preferenciasAntiguas.getInt("intentos_usados", 0)
-            )
-            necesitaGuardar = true
-        }
-        if (!preferencias.contains("historial_notas") &&
-            preferenciasAntiguas.contains("historial_notas")) {
-            editor.putString(
-                "historial_notas",
-                preferenciasAntiguas.getString("historial_notas", "").orEmpty()
-            )
-            necesitaGuardar = true
-        }
-        if (necesitaGuardar) editor.apply()
-        true
-    }
-
-    // Máximo permitido, por defecto tres.
-    // ProfesorScreen.kt comparte este almacenamiento y puede
-    // cambiar "max_intentos" entre 1 y 3.
+    // Máximo permitido, por defecto tres. En una versión futura,
+    // ProfesorScreen podrá configurar esta misma clave.
     var maxIntentos by remember(preferencias) {
         mutableIntStateOf(preferencias.getInt("max_intentos", 3).coerceIn(1, 3))
     }
@@ -106,47 +73,46 @@ fun PruebaLenguaje() {
     }
 
     // ========================================================
-    // BANCO DE PREGUNTAS: contenidos de Lenguaje para segundo básico (Chile).
+    // BANCO DE PREGUNTAS: contenidos de segundo básico (Chile).
     // ========================================================
     val preguntas = remember {
         listOf(
-            // Pregunta 1: reconocer el gerundio de «cantar».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de cantar?",
-                alternativas = listOf("Cantar", "Cantando", "Cantó", "Canta"),
-                correcta = 1,
-                explicacion = "El gerundio de cantar es cantando. Termina en -ando."
-            ),
-            // Pregunta 2: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "La niña está ___ un libro.",
-                alternativas = listOf("Leyendo", "Leer", "Leyó", "Lee"),
+            // Pregunta 1: Historia.
+            PreguntaPruebaHistoria(
+                texto = "¿Qué pueblo originario está presente en el centro y sur de Chile?",
+                alternativas = listOf("Mapuche", "Egipcio", "Romano", "Vikingo"),
                 correcta = 0,
-                explicacion = "Decimos «está leyendo». Leyendo expresa una acción en desarrollo."
+                explicacion = "El pueblo mapuche es originario del territorio que hoy incluye el centro y sur de Chile."
             ),
-            // Pregunta 3: reconocer el gerundio de «correr».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de correr?",
-                alternativas = listOf("Corría", "Corrió", "Corriendo", "Corre"),
+            // Pregunta 2: Historia.
+            PreguntaPruebaHistoria(
+                texto = "¿Por cuál punto cardinal aparece el Sol por la mañana?",
+                alternativas = listOf("Norte", "Sur", "Este", "Oeste"),
                 correcta = 2,
-                explicacion = "El gerundio de correr es corriendo. Termina en -iendo."
+                explicacion = "De manera general, el Sol sale por el este."
             ),
-            // Pregunta 4: completar una oración con gerundio.
-            PreguntaPruebaLenguaje(
-                texto = "Los niños están ___ en el patio.",
-                alternativas = listOf("Jugar", "Jugaron", "Juegan", "Jugando"),
-                correcta = 3,
-                explicacion = "La oración correcta es «Los niños están jugando en el patio»."
+            // Pregunta 3: Historia.
+            PreguntaPruebaHistoria(
+                texto = "¿Cuál de estos elementos es parte del paisaje natural?",
+                alternativas = listOf("Un edificio", "Un río", "Una carretera", "Un semáforo"),
+                correcta = 1,
+                explicacion = "Un río es un elemento natural del paisaje."
             ),
-            // Pregunta 5: reconocer el gerundio de «escribir».
-            PreguntaPruebaLenguaje(
-                texto = "¿Cuál es el gerundio de escribir?",
-                alternativas = listOf("Escribiendo", "Escribe", "Escribió", "Escribir"),
+            // Pregunta 4: Historia.
+            PreguntaPruebaHistoria(
+                texto = "¿Cuál de estas danzas es tradicional de Chile?",
+                alternativas = listOf("Cueca", "Flamenco", "Tango", "Vals vienés"),
                 correcta = 0,
-                explicacion = "El gerundio de escribir es escribiendo. Termina en -iendo."
+                explicacion = "La cueca es una danza tradicional de Chile."
+            ),
+            // Pregunta 5: Historia.
+            PreguntaPruebaHistoria(
+                texto = "¿En qué zona de Chile se encuentra el desierto de Atacama?",
+                alternativas = listOf("Zona norte", "Zona austral", "Zona sur", "En el océano"),
+                correcta = 0,
+                explicacion = "El desierto de Atacama se encuentra en el norte de Chile."
             )
         )
-        return
     }
 
     // Control de pantalla:
@@ -247,13 +213,13 @@ fun PruebaLenguaje() {
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
-                                    text = "Prueba de Lenguaje",
+                                    text = "Prueba de Historia",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = azulOscuro
                                 )
                                 Text(
-                                    text = "Gerundios · Lenguaje y Comunicación",
+                                    text = "Pueblos originarios, orientación y Chile",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = textoSecundario
                                 )
@@ -360,7 +326,7 @@ fun PruebaLenguaje() {
             // ====================================================
             1 -> {
                 Text(
-                    text = "Prueba de Lenguaje",
+                    text = "Prueba de Historia",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
