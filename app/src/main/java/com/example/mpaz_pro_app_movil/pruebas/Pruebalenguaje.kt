@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
+import com.example.mpaz_pro_app_movil.datos.DatosPrueba
 import kotlin.math.roundToInt
 
 // ============================================================
@@ -145,6 +146,7 @@ fun PruebaLenguaje() {
                 explicacion = "El gerundio de escribir es escribiendo. Termina en -iendo."
             )
         )
+        return
     }
 
     // Control de pantalla:
