@@ -16,10 +16,12 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.components.EtiquetaEstado
 import com.example.mpaz_pro_app_movil.datos.DatosPrueba
+import com.example.mpaz_pro_app_movil.datos.RepositorioUnidades
 import com.example.mpaz_pro_app_movil.datos.Unidad
 import com.example.mpaz_pro_app_movil.ui.theme.*
 
@@ -34,11 +36,16 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
     // null = no hay ninguna abierta, se ve la lista.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
-    // Lista de unidades que se ve en pantalla. Parte con las unidades de
-    // prueba y crece cuando la UTP crea una nueva. Por ahora vive solo en
-    // memoria: al cerrar la app se pierde (la persistencia viene después).
+    // El contexto permite abrir el almacenamiento del teléfono.
+    val context = LocalContext.current
+
+    // Lista de unidades que se ve en pantalla. Se carga desde el teléfono
+    // (la primera vez trae las unidades de prueba) y crece cuando la UTP
+    // crea una nueva. Cada vez que crece se vuelve a guardar.
     val unidades = remember {
-        mutableStateListOf<Unidad>().apply { addAll(DatosPrueba.unidades) }
+        mutableStateListOf<Unidad>().apply {
+            addAll(RepositorioUnidades.cargar(context))
+        }
     }
 
     // Para avisar "Unidad creada" abajo en la pantalla.
@@ -162,9 +169,10 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
                             codigosExistentes = unidades.map { it.codigoOA },
                             siguienteId = (unidades.maxOfOrNull { it.id } ?: 0) + 1,
                             onCrear = { unidadNueva ->
-                                // Se agrega a la lista, se vuelve a la pestaña
-                                // Unidades y se avisa que quedó guardada.
+                                // Se agrega a la lista, se guarda en el teléfono,
+                                // se vuelve a la pestaña Unidades y se avisa.
                                 unidades.add(unidadNueva)
+                                RepositorioUnidades.guardar(context, unidades)
                                 pestana = 0
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
