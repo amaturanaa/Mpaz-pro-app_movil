@@ -39,6 +39,12 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
     // El contexto permite abrir el almacenamiento del teléfono.
     val context = LocalContext.current
 
+    // PRUEBA TEMPORAL: dice si lo que se ve viene del teléfono
+    // o son las unidades de prueba. Se borra cuando la persistencia funcione.
+    var guardadoEnTelefono by remember {
+        mutableStateOf(RepositorioUnidades.hayGuardado(context))
+    }
+
     // Lista de unidades que se ve en pantalla. Se carga desde el teléfono
     // (la primera vez trae las unidades de prueba) y crece cuando la UTP
     // crea una nueva. Cada vez que crece se vuelve a guardar.
@@ -161,10 +167,22 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     when (pestana) {
-                        0 -> ListaUnidadesUtp(
-                            unidades = unidades,
-                            onAbrir = { unidad -> unidadAbierta = unidad }
-                        )
+                        0 -> {
+                            // PRUEBA TEMPORAL (borrar cuando funcione el guardado)
+                            Text(
+                                text = if (guardadoEnTelefono) {
+                                    "Origen: leídas desde el teléfono (${unidades.size})"
+                                } else {
+                                    "Origen: unidades de prueba (aún no hay nada guardado)"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextoSecundario
+                            )
+                            ListaUnidadesUtp(
+                                unidades = unidades,
+                                onAbrir = { unidad -> unidadAbierta = unidad }
+                            )
+                        }
                         else -> FormularioUnidad(
                             codigosExistentes = unidades.map { it.codigoOA },
                             siguienteId = (unidades.maxOfOrNull { it.id } ?: 0) + 1,
@@ -172,11 +190,16 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
                                 // Se agrega a la lista, se guarda en el teléfono,
                                 // se vuelve a la pestaña Unidades y se avisa.
                                 unidades.add(unidadNueva)
-                                RepositorioUnidades.guardar(context, unidades)
+                                val seGuardo = RepositorioUnidades.guardar(context, unidades)
+                                guardadoEnTelefono = seGuardo
                                 pestana = 0
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        "Unidad creada como borrador."
+                                        if (seGuardo) {
+                                            "Unidad creada y guardada en el teléfono."
+                                        } else {
+                                            "Unidad creada, pero NO se pudo guardar."
+                                        }
                                     )
                                 }
                             }

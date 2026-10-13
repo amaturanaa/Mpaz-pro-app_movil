@@ -4,60 +4,78 @@ import android.content.Context
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 
 // =============================================
 // REPOSITORIO DE UNIDADES (guardado en el teléfono)
 // =============================================
 // Guarda y recupera la lista de unidades de la UTP.
-// Usa SharedPreferences: un archivo pequeño privado de la app donde
-// las unidades se escriben como texto JSON. Sobrevive al cerrar la app.
+// Las unidades se escriben como texto JSON en un archivo privado de la app
+// (carpeta "files" del teléfono). Sobrevive al cerrar la app del todo.
 object RepositorioUnidades {
 
-    // Nombre del archivo y de la clave donde se guarda la lista.
-    private const val ARCHIVO = "unidades_utp"
-    private const val CLAVE_LISTA = "lista_unidades"
+    private const val NOMBRE_ARCHIVO = "unidades_utp.json"
 
     // Etiqueta para buscar estos mensajes en Logcat.
     private const val ETIQUETA = "RepoUnidades"
 
+    // El archivo donde viven las unidades.
+    private fun archivo(context: Context): File {
+        return File(context.applicationContext.filesDir, NOMBRE_ARCHIVO)
+    }
+
+    // true si ya se guardó algo alguna vez en el teléfono.
+    fun hayGuardado(context: Context): Boolean {
+        return archivo(context).exists()
+    }
+
     // Devuelve las unidades guardadas.
     // La primera vez (cuando todavía no se guardó nada) devuelve las
-    // unidades de prueba. Si el texto guardado estuviera dañado,
+    // unidades de prueba. Si el archivo estuviera dañado,
     // también devuelve las de prueba en vez de cerrar la app.
     fun cargar(context: Context): List<Unidad> {
-        val preferencias = context.getSharedPreferences(ARCHIVO, Context.MODE_PRIVATE)
-        val texto = preferencias.getString(CLAVE_LISTA, null)
+        val archivo = archivo(context)
 
-        if (texto == null) {
-            Log.d(ETIQUETA, "cargar: no hay nada guardado, uso las unidades de prueba")
+        if (!archivo.exists()) {
+            Log.d(ETIQUETA, "cargar: no hay archivo, uso las unidades de prueba")
             return DatosPrueba.unidades
         }
 
         return try {
-            val arreglo = JSONArray(texto)
+            val arreglo = JSONArray(archivo.readText())
             val lista = (0 until arreglo.length()).map { posicion ->
                 aUnidad(arreglo.getJSONObject(posicion))
             }
-            Log.d(ETIQUETA, "cargar: leí ${lista.size} unidades guardadas")
+            Log.d(ETIQUETA, "cargar: leí ${lista.size} unidades de ${archivo.absolutePath}")
             lista
         } catch (error: Exception) {
-            Log.e(ETIQUETA, "cargar: el texto guardado no se pudo leer", error)
+            Log.e(ETIQUETA, "cargar: el archivo no se pudo leer", error)
             DatosPrueba.unidades
         }
     }
 
     // Guarda la lista completa de unidades.
-    // apply() escribe en segundo plano sin congelar la pantalla.
-    fun guardar(context: Context, unidades: List<Unidad>) {
-        val arreglo = JSONArray()
-        unidades.forEach { unidad -> arreglo.put(aJson(unidad)) }
+    // Devuelve true si se escribió bien, false si hubo algún problema.
+    // La escritura es inmediata (no en segundo plano): cuando esta función
+    // termina, los datos ya están en el disco del teléfono.
+    fun guardar(context: Context, unidades: List<Unidad>): Boolean {
+        return try {
+            val arreglo = JSONArray()
+            unidades.forEach { unidad -> arreglo.put(aJson(unidad)) }
 
-        context.getSharedPreferences(ARCHIVO, Context.MODE_PRIVATE)
-            .edit()
-            .putString(CLAVE_LISTA, arreglo.toString())
-            .apply()
+            val archivo = archivo(context)
+            FileOutputStream(archivo).use { salida ->
+                salida.write(arreglo.toString().toByteArray(Charsets.UTF_8))
+                salida.fd.sync() // obliga a escribir en el disco ahora
+            }
 
-        Log.d(ETIQUETA, "guardar: guardé ${unidades.size} unidades")
+            Log.d(ETIQUETA, "guardar: guardé ${unidades.size} unidades en ${archivo.absolutePath}")
+            true
+        } catch (error: Exception) {
+            Log.e(ETIQUETA, "guardar: no se pudo guardar", error)
+            false
+        }
     }
 
     // Convierte una Unidad en un objeto JSON (campo por campo).

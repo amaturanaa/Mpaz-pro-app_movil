@@ -107,8 +107,8 @@ fun FormularioUnidad(
 
         CampoValidado(
             valor = codigoOA,
-            // El código siempre se escribe en mayúsculas.
-            alCambiar = { codigoOA = it.uppercase() },
+            // El código se limpia mientras se escribe (mayúsculas, guion normal, sin espacios).
+            alCambiar = { codigoOA = Validador.normalizarCodigoOA(it) },
             etiqueta = "Código OA",
             icono = Icons.Filled.Info,
             error = if (mostrarErrores) errorCodigo else null,
