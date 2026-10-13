@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.mpaz_pro_app_movil.screens.ProfesorScreen
+import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MPAZ_PRO_APP_MOVILTheme {
-                ProfesorScreen(onCerrarSesion = { })
+                EstudianteScreen(onCerrarSesion = { })
             }
         }
     }
