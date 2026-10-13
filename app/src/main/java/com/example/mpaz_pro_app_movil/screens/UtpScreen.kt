@@ -16,10 +16,12 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.components.EtiquetaEstado
 import com.example.mpaz_pro_app_movil.datos.DatosPrueba
+import com.example.mpaz_pro_app_movil.datos.RepositorioUnidades
 import com.example.mpaz_pro_app_movil.datos.Unidad
 import com.example.mpaz_pro_app_movil.ui.theme.*
 
@@ -34,11 +36,22 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
     // null = no hay ninguna abierta, se ve la lista.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
-    // Lista de unidades que se ve en pantalla. Parte con las unidades de
-    // prueba y crece cuando la UTP crea una nueva. Por ahora vive solo en
-    // memoria: al cerrar la app se pierde (la persistencia viene después).
+    // El contexto permite abrir el almacenamiento del teléfono.
+    val context = LocalContext.current
+
+    // PRUEBA TEMPORAL: dice si lo que se ve viene del teléfono
+    // o son las unidades de prueba. Se borra cuando la persistencia funcione.
+    var guardadoEnTelefono by remember {
+        mutableStateOf(RepositorioUnidades.hayGuardado(context))
+    }
+
+    // Lista de unidades que se ve en pantalla. Se carga desde el teléfono
+    // (la primera vez trae las unidades de prueba) y crece cuando la UTP
+    // crea una nueva. Cada vez que crece se vuelve a guardar.
     val unidades = remember {
-        mutableStateListOf<Unidad>().apply { addAll(DatosPrueba.unidades) }
+        mutableStateListOf<Unidad>().apply {
+            addAll(RepositorioUnidades.cargar(context))
+        }
     }
 
     // Para avisar "Unidad creada" abajo en la pantalla.
@@ -154,21 +167,39 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     when (pestana) {
-                        0 -> ListaUnidadesUtp(
-                            unidades = unidades,
-                            onAbrir = { unidad -> unidadAbierta = unidad }
-                        )
+                        0 -> {
+                            // PRUEBA TEMPORAL (borrar cuando funcione el guardado)
+                            Text(
+                                text = if (guardadoEnTelefono) {
+                                    "Origen: leídas desde el teléfono (${unidades.size})"
+                                } else {
+                                    "Origen: unidades de prueba (aún no hay nada guardado)"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextoSecundario
+                            )
+                            ListaUnidadesUtp(
+                                unidades = unidades,
+                                onAbrir = { unidad -> unidadAbierta = unidad }
+                            )
+                        }
                         else -> FormularioUnidad(
                             codigosExistentes = unidades.map { it.codigoOA },
                             siguienteId = (unidades.maxOfOrNull { it.id } ?: 0) + 1,
                             onCrear = { unidadNueva ->
-                                // Se agrega a la lista, se vuelve a la pestaña
-                                // Unidades y se avisa que quedó guardada.
+                                // Se agrega a la lista, se guarda en el teléfono,
+                                // se vuelve a la pestaña Unidades y se avisa.
                                 unidades.add(unidadNueva)
+                                val seGuardo = RepositorioUnidades.guardar(context, unidades)
+                                guardadoEnTelefono = seGuardo
                                 pestana = 0
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        "Unidad creada como borrador."
+                                        if (seGuardo) {
+                                            "Unidad creada y guardada en el teléfono."
+                                        } else {
+                                            "Unidad creada, pero NO se pudo guardar."
+                                        }
                                     )
                                 }
                             }
