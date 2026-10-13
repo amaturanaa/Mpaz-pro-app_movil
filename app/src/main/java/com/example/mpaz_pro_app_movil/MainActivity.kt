@@ -9,6 +9,8 @@ import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
 import com.example.mpaz_pro_app_movil.screens.LoginScreen
 import com.example.mpaz_pro_app_movil.screens.ProfesorScreen
+import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
+import com.example.mpaz_pro_app_movil.screens.UtpScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
 
 // =============================================
