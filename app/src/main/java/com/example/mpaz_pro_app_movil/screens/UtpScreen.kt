@@ -34,6 +34,16 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
     // null = no hay ninguna abierta, se ve la lista.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
+    // Lista de unidades que se ve en pantalla. Parte con las unidades de
+    // prueba y crece cuando la UTP crea una nueva. Por ahora vive solo en
+    // memoria: al cerrar la app se pierde (la persistencia viene después).
+    val unidades = remember {
+        mutableStateListOf<Unidad>().apply { addAll(DatosPrueba.unidades) }
+    }
+
+    // Para avisar "Unidad creada" abajo en la pantalla.
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -99,6 +109,8 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
 
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+
                 topBar = {
                     TopAppBar(
                         title = {
@@ -143,12 +155,23 @@ fun UtpScreen(onCerrarSesion: () -> Unit) {
                 ) {
                     when (pestana) {
                         0 -> ListaUnidadesUtp(
-                            unidades = DatosPrueba.unidades,
+                            unidades = unidades,
                             onAbrir = { unidad -> unidadAbierta = unidad }
                         )
-                        else -> Text(
-                            text = "Aquí irá el formulario para crear una unidad",
-                            style = MaterialTheme.typography.titleMedium
+                        else -> FormularioUnidad(
+                            codigosExistentes = unidades.map { it.codigoOA },
+                            siguienteId = (unidades.maxOfOrNull { it.id } ?: 0) + 1,
+                            onCrear = { unidadNueva ->
+                                // Se agrega a la lista, se vuelve a la pestaña
+                                // Unidades y se avisa que quedó guardada.
+                                unidades.add(unidadNueva)
+                                pestana = 0
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Unidad creada como borrador."
+                                    )
+                                }
+                            }
                         )
                     }
                 }
