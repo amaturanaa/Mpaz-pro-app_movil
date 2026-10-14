@@ -21,33 +21,40 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.components.CampoValidado
+import com.example.mpaz_pro_app_movil.components.MensajeError
 import com.example.mpaz_pro_app_movil.datos.DatosPrueba
 import com.example.mpaz_pro_app_movil.datos.EstadoUnidad
 import com.example.mpaz_pro_app_movil.datos.Unidad
 import com.example.mpaz_pro_app_movil.validacion.Validador
 
 // =============================================
-// FORMULARIO PARA CREAR UNA UNIDAD (perfil UTP)
+// FORMULARIO DE UNIDAD (perfil UTP)
 // =============================================
-// codigosExistentes : códigos OA ya usados, para no repetirlos
-// siguienteId       : número que recibirá la unidad nueva
-// onCrear           : se llama con la unidad ya armada cuando todo es válido
+// Sirve para crear una unidad nueva y para editar una existente.
+//
+// codigosExistentes : códigos OA ya usados por OTRAS unidades
+// siguienteId       : número que recibirá la unidad si es nueva
+// onGuardar         : se llama con la unidad armada cuando todo es válido
+// unidadInicial     : si viene, el formulario parte con sus datos (edición)
+// textoBoton        : lo que dice el botón
 @Composable
 fun FormularioUnidad(
     codigosExistentes: List<String>,
     siguienteId: Int,
-    onCrear: (Unidad) -> Unit
+    onGuardar: (Unidad) -> Unit,
+    unidadInicial: Unidad? = null,
+    textoBoton: String = "Guardar unidad"
 ) {
     // Lo que la persona va escribiendo. Se guarda con remember
     // para que no se pierda cuando la pantalla se redibuja.
-    var asignatura by remember { mutableStateOf<String?>(null) }
-    var titulo by remember { mutableStateOf("") }
-    var codigoOA by remember { mutableStateOf("") }
-    var objetivo by remember { mutableStateOf("") }
-    var explicacion by remember { mutableStateOf("") }
-    var ejemplo by remember { mutableStateOf("") }
+    var asignatura by remember { mutableStateOf<String?>(unidadInicial?.asignatura) }
+    var titulo by remember { mutableStateOf(unidadInicial?.titulo ?: "") }
+    var codigoOA by remember { mutableStateOf(unidadInicial?.codigoOA ?: "") }
+    var objetivo by remember { mutableStateOf(unidadInicial?.objetivo ?: "") }
+    var explicacion by remember { mutableStateOf(unidadInicial?.explicacion ?: "") }
+    var ejemplo by remember { mutableStateOf(unidadInicial?.ejemplo ?: "") }
 
-    // Los errores solo se muestran después de tocar "Guardar" la primera vez.
+    // Los errores solo se muestran después de tocar el botón la primera vez.
     // Desde ahí se actualizan mientras la persona corrige.
     var mostrarErrores by remember { mutableStateOf(false) }
 
@@ -87,13 +94,7 @@ fun FormularioUnidad(
                 label = { Text(opcion) }
             )
         }
-        if (mostrarErrores && errorAsignatura != null) {
-            Text(
-                text = errorAsignatura,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+        MensajeError(if (mostrarErrores) errorAsignatura else null)
 
         CampoValidado(
             valor = titulo,
@@ -158,26 +159,27 @@ fun FormularioUnidad(
                 // Primero se muestran los errores (si los hay).
                 mostrarErrores = true
 
-                // Solo se crea la unidad si todos los campos son válidos.
+                // Solo se guarda si todos los campos son válidos.
                 val asignaturaElegida = asignatura
                 if (todoCorrecto && asignaturaElegida != null) {
-                    onCrear(
+                    onGuardar(
                         Unidad(
-                            id = siguienteId,
+                            // Al editar se conserva el id y el estado de la unidad.
+                            id = unidadInicial?.id ?: siguienteId,
                             asignatura = asignaturaElegida,
                             titulo = titulo.trim(),
-                            codigoOA = codigoOA.trim(),
+                            codigoOA = Validador.normalizarCodigoOA(codigoOA),
                             objetivo = objetivo.trim(),
                             explicacion = explicacion.trim(),
                             ejemplo = ejemplo.trim(),
                             // Toda unidad nueva parte como borrador.
-                            estado = EstadoUnidad.BORRADOR
+                            estado = unidadInicial?.estado ?: EstadoUnidad.BORRADOR
                         )
                     )
                 }
             }
         ) {
-            Text("Guardar unidad")
+            Text(textoBoton)
         }
     }
 }
