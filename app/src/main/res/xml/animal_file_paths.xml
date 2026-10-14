@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Configura la carpeta privada donde
+    MPAZ PRO guardará las fotos de animales.
+-->
+
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        files-path indica que trabajaremos
+        dentro del almacenamiento privado
+        y persistente de la aplicación.
+
+        La carpeta debe coincidir con la
+        utilizada en ActividadAnimalesScreen.kt.
+    -->
+    <files-path
+        name="imagenes_animales"
+        path="fotos_animales_ciencias/" />
+
+</paths>
+
