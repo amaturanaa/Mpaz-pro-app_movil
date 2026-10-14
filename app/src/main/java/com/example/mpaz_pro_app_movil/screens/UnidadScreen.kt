@@ -1,6 +1,8 @@
 package com.example.mpaz_pro_app_movil.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,12 +25,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
+    // Recuerda si el estudiante abrió la nueva actividad de animales.
+    // Solo se usa cuando estamos dentro de Ciencias Naturales.
+    var mostrandoActividadAnimales by rememberSaveable(asignatura) {
+        mutableStateOf(false)
+    }
+
+    // La actividad tiene su propia pantalla, su botón Volver y
+    // su propio tratamiento del botón atrás del teléfono.
+    if (asignatura == "Ciencias Naturales" && mostrandoActividadAnimales) {
+        ActividadAnimalesScreen(onVolver = { mostrandoActividadAnimales = false })
+        return
+    }
+
     // El botón atrás del teléfono también vuelve a la lista
     BackHandler(onBack = onVolver)
 
@@ -52,6 +69,7 @@ fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -72,6 +90,41 @@ fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
                 ) {
                     Text("Ejemplo", style = MaterialTheme.typography.titleMedium)
                     Text(ejemploDe(asignatura), style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+
+            // ====================================================
+            // NUEVA ACTIVIDAD (SOLO CIENCIAS NATURALES)
+            // ====================================================
+            // La evaluación final sigue en la pestaña "Pruebas".
+            // Esta actividad práctica NO consume los 3 intentos.
+            if (asignatura == "Ciencias Naturales") {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFFEDF5FF)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "Actividad: Exploradores de animales",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            "Saca o elige entre 3 y 10 fotos de animales, " +
+                                    "incluidos insectos, y clasifícalos como " +
+                                    "vertebrados o invertebrados."
+                        )
+                        Button(
+                            onClick = { mostrandoActividadAnimales = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Abrir actividad de animales")
+                        }
+                    }
                 }
             }
 
