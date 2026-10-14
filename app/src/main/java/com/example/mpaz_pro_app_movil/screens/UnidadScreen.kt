@@ -128,13 +128,9 @@ fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
                 }
             }
 
-            // Por ahora no hace nada: aquí irá el texto a voz
-            OutlinedButton(onClick = { }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Escuchar")
-            }
-
+            // Reproduce la explicación y el ejemplo en voz alta
+            BotonNarracion(asignatura)
+        }
             // Por ahora no hace nada: aquí irá la vista de práctica
             Button(onClick = { }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Filled.Star, contentDescription = null)
@@ -143,7 +139,7 @@ fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
             }
         }
     }
-}
+
 
 // Contenido de prueba. Después vendrá de la base de datos.
 fun explicacionDe(asignatura: String): String = when (asignatura) {
