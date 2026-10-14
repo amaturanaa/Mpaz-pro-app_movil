@@ -9,6 +9,19 @@ enum class EstadoUnidad(val texto: String) {
     DESHABILITADO("Deshabilitado")
 }
 
+// A qué estados puede pasar una unidad desde el estado en que está.
+// Es la regla del flujo: nadie puede saltarse pasos.
+//   Borrador -> En revisión -> Autorizado -> Publicado -> Deshabilitado
+// Una unidad en revisión puede devolverse a borrador, y una
+// deshabilitada puede volver a publicarse.
+fun EstadoUnidad.siguientesPermitidos(): List<EstadoUnidad> = when (this) {
+    EstadoUnidad.BORRADOR -> listOf(EstadoUnidad.EN_REVISION)
+    EstadoUnidad.EN_REVISION -> listOf(EstadoUnidad.AUTORIZADO, EstadoUnidad.BORRADOR)
+    EstadoUnidad.AUTORIZADO -> listOf(EstadoUnidad.PUBLICADO)
+    EstadoUnidad.PUBLICADO -> listOf(EstadoUnidad.DESHABILITADO)
+    EstadoUnidad.DESHABILITADO -> listOf(EstadoUnidad.PUBLICADO)
+}
+
 // Una unidad didáctica: lo que crea la UTP para una asignatura.
 data class Unidad(
     val id: Int,
@@ -40,6 +53,7 @@ data class Estudiante(
 )
 
 // Lo que define el docente al asignar una unidad a un curso.
+// Las fechas se guardan como texto ISO: "2026-12-15".
 data class Asignacion(
     val id: Int,
     val unidadId: Int,
@@ -58,5 +72,14 @@ data class Resultado(
     val puntaje: Int,
     val totalPreguntas: Int,
     val respuestas: List<Int>,
+    val fecha: String
+)
+
+// Comentario que el docente deja sobre un estudiante en una unidad.
+data class Observacion(
+    val id: Int,
+    val estudianteId: Int,
+    val unidadId: Int,
+    val texto: String,
     val fecha: String
 )
