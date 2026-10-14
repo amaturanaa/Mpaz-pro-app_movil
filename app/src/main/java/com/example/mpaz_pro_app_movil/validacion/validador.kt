@@ -27,6 +27,8 @@ object Validador {
             .filter { it.isLetterOrDigit() || it == '-' }
     }
 
+    // ---------- Reglas generales ----------
+
     // Revisa que el campo no esté vacío ni solo con espacios.
     fun obligatorio(valor: String, nombreCampo: String): String? {
         return if (valor.isBlank()) "$nombreCampo es obligatorio." else null
@@ -44,10 +46,16 @@ object Validador {
         }
     }
 
-    // Revisa que se haya elegido una asignatura de la lista.
-    fun asignatura(valor: String?): String? {
-        return if (valor.isNullOrBlank()) "Elige una asignatura." else null
+    // Revisa que se haya elegido una opción (chips, botones de opción).
+    fun opcionElegida(valor: String?, mensaje: String): String? {
+        return if (valor.isNullOrBlank()) mensaje else null
     }
+
+    // ---------- Unidades ----------
+
+    // Revisa que se haya elegido una asignatura de la lista.
+    fun asignatura(valor: String?): String? =
+        opcionElegida(valor, "Elige una asignatura.")
 
     // Revisa el formato del código OA, diciendo qué parte está mal.
     fun codigoOA(valor: String): String? {
@@ -68,5 +76,58 @@ object Validador {
         val texto = normalizarCodigoOA(valor)
         val repetido = codigosExistentes.any { it.equals(texto, ignoreCase = true) }
         return if (repetido) "Ya existe una unidad con el código $texto." else null
+    }
+
+    // ---------- Preguntas ----------
+
+    // Las cuatro alternativas deben estar escritas y ser distintas entre sí.
+    fun alternativasDistintas(alternativas: List<String>): String? {
+        val limpias = alternativas.map { it.trim().lowercase() }
+        if (limpias.any { it.isEmpty() }) return null // ya lo avisa cada campo
+        return if (limpias.toSet().size != limpias.size) {
+            "Las alternativas no pueden repetirse."
+        } else null
+    }
+
+    // Revisa que se haya marcado cuál alternativa es la correcta.
+    fun alternativaCorrecta(posicion: Int?): String? {
+        return if (posicion == null) "Marca cuál es la alternativa correcta." else null
+    }
+
+    // ---------- Fechas y asignaciones ----------
+
+    // Revisa que sea una fecha real escrita como dd/mm/aaaa.
+    fun fecha(valor: String, nombreCampo: String): String? {
+        if (valor.isBlank()) return "$nombreCampo es obligatoria."
+        return if (Fechas.aIso(valor) == null) {
+            "Escribe una fecha real como dd/mm/aaaa, por ejemplo 15/12/2026."
+        } else null
+    }
+
+    // Revisa el rango con fechas ya guardadas (año-mes-día):
+    // el término no puede ser antes del inicio ni antes de hoy.
+    fun rangoFechasIso(inicioIso: String, finIso: String): String? {
+        return when {
+            finIso < inicioIso -> "La fecha de término no puede ser anterior a la de inicio."
+            finIso < Fechas.hoyIso() -> "La fecha de término no puede ser anterior a hoy."
+            else -> null
+        }
+    }
+
+    // Lo mismo, pero con lo que escribió la persona (dd/mm/aaaa).
+    // Si alguna fecha no es válida devuelve null: ese error ya lo da fecha().
+    fun rangoFechas(inicioVisible: String, finVisible: String): String? {
+        val inicio = Fechas.aIso(inicioVisible) ?: return null
+        val fin = Fechas.aIso(finVisible) ?: return null
+        return rangoFechasIso(inicio, fin)
+    }
+
+    // Los intentos permitidos van de 1 a 3.
+    fun intentos(valor: Int?): String? {
+        return when {
+            valor == null -> "Elige cuántos intentos se permiten."
+            valor < 1 || valor > 3 -> "Los intentos deben ser entre 1 y 3."
+            else -> null
+        }
     }
 }
