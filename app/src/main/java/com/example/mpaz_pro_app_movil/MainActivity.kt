@@ -8,7 +8,7 @@ import androidx.compose.runtime.*
 import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
 import com.example.mpaz_pro_app_movil.screens.LoginScreen
-import com.example.mpaz_pro_app_movil.screens.ProfesorScreen
+import com.example.mpaz_pro_app_movil.screens.DocenteScreen
 import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
 import com.example.mpaz_pro_app_movil.screens.UtpScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
@@ -68,8 +68,8 @@ fun AplicacionMPAZ() {
                     onCerrarSesion = { usuarioActivo = null }
                 )
 
-                // DOCENTE: permite abrir su panel y salir.
-                RolUsuario.DOCENTE -> ProfesorScreen(
+                // DOCENTE: panel con unidades publicadas, asignaciones e informes.
+                RolUsuario.DOCENTE -> DocenteScreen(
                     onCerrarSesion = { usuarioActivo = null }
                 )
 
