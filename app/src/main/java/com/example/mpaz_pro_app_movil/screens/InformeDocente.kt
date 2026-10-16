@@ -24,8 +24,8 @@ import com.example.mpaz_pro_app_movil.components.CampoValidado
 import com.example.mpaz_pro_app_movil.components.MensajeError
 import com.example.mpaz_pro_app_movil.datos.Calificacion
 import com.example.mpaz_pro_app_movil.datos.DatosPrueba
-import com.example.mpaz_pro_app_movil.datos.Observacion
-import com.example.mpaz_pro_app_movil.datos.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.Observacion
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.ui.theme.AzulPrincipal
 import com.example.mpaz_pro_app_movil.ui.theme.FondoTarjetas
 import com.example.mpaz_pro_app_movil.ui.theme.TextoPrincipal

@@ -26,7 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.components.CampoValidado
 import com.example.mpaz_pro_app_movil.components.MensajeError
-import com.example.mpaz_pro_app_movil.datos.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 import com.example.mpaz_pro_app_movil.validacion.Validador
 

@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.mpaz_pro_app_movil.datos.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
 import com.example.mpaz_pro_app_movil.ui.theme.*
 
 // Menú desplegable con opciones.

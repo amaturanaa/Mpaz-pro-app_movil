@@ -1,10 +1,15 @@
-package com.example.mpaz_pro_app_movil.datos
+package com.example.mpaz_pro_app_movil.datos.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.example.mpaz_pro_app_movil.datos.entidad.AsignacionEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.ObservacionEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.PreguntaEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.UnidadEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.UsuarioEntidad
 
 // =============================================
 // DAOs: las consultas a la base de datos (Room)

@@ -6,6 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.mpaz_pro_app_movil.datos.dao.AsignacionDao
+import com.example.mpaz_pro_app_movil.datos.dao.ObservacionDao
+import com.example.mpaz_pro_app_movil.datos.dao.PreguntaDao
+import com.example.mpaz_pro_app_movil.datos.dao.UnidadDao
+import com.example.mpaz_pro_app_movil.datos.dao.UsuarioDao
+import com.example.mpaz_pro_app_movil.datos.entidad.AsignacionEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.ObservacionEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.PreguntaEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.UnidadEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.UsuarioEntidad
 
 // =============================================
 // BASE DE DATOS LOCAL DE LA APP (Room)

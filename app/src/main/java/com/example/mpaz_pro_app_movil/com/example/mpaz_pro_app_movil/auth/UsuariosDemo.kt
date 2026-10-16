@@ -3,8 +3,8 @@ package com.example.mpaz_pro_app_movil.auth
 import android.content.Context
 import android.util.Log
 import com.example.mpaz_pro_app_movil.datos.BaseDatosMpaz
-import com.example.mpaz_pro_app_movil.datos.UsuarioDao
-import com.example.mpaz_pro_app_movil.datos.UsuarioEntidad
+import com.example.mpaz_pro_app_movil.datos.dao.UsuarioDao
+import com.example.mpaz_pro_app_movil.datos.entidad.UsuarioEntidad
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

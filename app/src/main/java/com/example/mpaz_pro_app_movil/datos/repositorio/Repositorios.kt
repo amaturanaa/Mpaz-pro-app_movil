@@ -1,7 +1,15 @@
-package com.example.mpaz_pro_app_movil.datos
+package com.example.mpaz_pro_app_movil.datos.repositorio
 
 import android.content.Context
 import android.util.Log
+import com.example.mpaz_pro_app_movil.datos.BaseDatosMpaz
+import com.example.mpaz_pro_app_movil.datos.DatosPrueba
+import com.example.mpaz_pro_app_movil.datos.entidad.aEntidad
+import com.example.mpaz_pro_app_movil.datos.entidad.aModelo
+import com.example.mpaz_pro_app_movil.datos.model.Asignacion
+import com.example.mpaz_pro_app_movil.datos.model.Observacion
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 
 // Lo que se lee de la base de datos al abrir la app.
 class DatosGuardados(

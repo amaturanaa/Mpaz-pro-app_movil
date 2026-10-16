@@ -1,9 +1,14 @@
-package com.example.mpaz_pro_app_movil.datos
+package com.example.mpaz_pro_app_movil.datos.entidad
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import org.json.JSONArray
 import androidx.room.ColumnInfo
+import com.example.mpaz_pro_app_movil.datos.model.Asignacion
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Observacion
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 
 // =============================================
 // TABLAS DE LA BASE DE DATOS (Room)
