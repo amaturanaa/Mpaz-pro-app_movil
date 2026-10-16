@@ -1,5 +1,11 @@
 package com.example.mpaz_pro_app_movil.datos
 
+import com.example.mpaz_pro_app_movil.datos.model.Asignacion
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Estudiante
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
+
 // Datos ficticios compartidos por toda la app mientras no exista la base de datos.
 // La UTP, el docente y el estudiante leen de aquí, así todos ven lo mismo.
 // En la fase 2 se reemplazan por los datos guardados.
@@ -57,28 +63,44 @@ object DatosPrueba {
 
     val preguntas = listOf(
         // UNIDAD 1: LOS GERUNDIOS (las cinco preguntas de la prueba de Sofi)
-        Pregunta(1, 1, "¿Cuál es el gerundio de cantar?",
-            listOf("Cantar", "Cantando", "Cantó", "Canta"), 1, true),
-        Pregunta(2, 1, "La niña está ___ un libro.",
-            listOf("Leyendo", "Leer", "Leyó", "Lee"), 0, true),
-        Pregunta(3, 1, "¿Cuál es el gerundio de correr?",
-            listOf("Corría", "Corrió", "Corriendo", "Corre"), 2, true),
-        Pregunta(4, 1, "Los niños están ___ en el patio.",
-            listOf("Jugar", "Jugaron", "Juegan", "Jugando"), 3, true),
-        Pregunta(5, 1, "¿Cuál es el gerundio de escribir?",
-            listOf("Escribiendo", "Escribe", "Escribió", "Escribir"), 0, true),
+        Pregunta(
+            1, 1, "¿Cuál es el gerundio de cantar?",
+            listOf("Cantar", "Cantando", "Cantó", "Canta"), 1, true
+        ),
+        Pregunta(
+            2, 1, "La niña está ___ un libro.",
+            listOf("Leyendo", "Leer", "Leyó", "Lee"), 0, true
+        ),
+        Pregunta(
+            3, 1, "¿Cuál es el gerundio de correr?",
+            listOf("Corría", "Corrió", "Corriendo", "Corre"), 2, true
+        ),
+        Pregunta(
+            4, 1, "Los niños están ___ en el patio.",
+            listOf("Jugar", "Jugaron", "Juegan", "Jugando"), 3, true
+        ),
+        Pregunta(
+            5, 1, "¿Cuál es el gerundio de escribir?",
+            listOf("Escribiendo", "Escribe", "Escribió", "Escribir"), 0, true
+        ),
 
         // UNIDAD 2: SUMAS HASTA 20
-        Pregunta(6, 2, "¿Cuánto es 8 + 7?",
-            listOf("14", "16", "15", "13"), 2, true),
+        Pregunta(
+            6, 2, "¿Cuánto es 8 + 7?",
+            listOf("14", "16", "15", "13"), 2, true
+        ),
 
         // UNIDAD 3: LAS PLANTAS
-        Pregunta(7, 3, "¿Qué necesita una planta para crecer?",
-            listOf("Solo oscuridad", "Agua y luz", "Una caja", "Nada"), 1, true),
+        Pregunta(
+            7, 3, "¿Qué necesita una planta para crecer?",
+            listOf("Solo oscuridad", "Agua y luz", "Una caja", "Nada"), 1, true
+        ),
 
         // UNIDAD 4: NUESTRA COMUNIDAD
-        Pregunta(8, 4, "¿Cuál es un lugar de la comunidad?",
-            listOf("La plaza", "Un cajón", "Mi mochila", "Un lápiz"), 0, true)
+        Pregunta(
+            8, 4, "¿Cuál es un lugar de la comunidad?",
+            listOf("La plaza", "Un cajón", "Mi mochila", "Un lápiz"), 0, true
+        )
     )
 
     val estudiantes = listOf(

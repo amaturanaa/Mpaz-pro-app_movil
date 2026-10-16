@@ -2,11 +2,11 @@ package com.example.mpaz_pro_app_movil.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.example.mpaz_pro_app_movil.datos.AlmacenMpaz
-import com.example.mpaz_pro_app_movil.datos.EstadoUnidad
-import com.example.mpaz_pro_app_movil.datos.Pregunta
-import com.example.mpaz_pro_app_movil.datos.Unidad
-import com.example.mpaz_pro_app_movil.datos.siguientesPermitidos
+import com.example.mpaz_pro_app_movil.datos.repositorio.AlmacenMpaz
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.siguientesPermitidos
 
 // =============================================
 // VIEWMODEL DEL PERFIL UTP

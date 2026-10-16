@@ -23,9 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import com.example.mpaz_pro_app_movil.datos.Asignacion
+import com.example.mpaz_pro_app_movil.datos.model.Asignacion
 import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
-import com.example.mpaz_pro_app_movil.datos.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.notificaciones.Notificador
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.validacion.Fechas

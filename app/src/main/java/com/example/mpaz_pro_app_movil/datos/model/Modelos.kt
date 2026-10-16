@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.datos
+package com.example.mpaz_pro_app_movil.datos.model
 
 // Los cinco estados por los que pasa una unidad, en orden.
 enum class EstadoUnidad(val texto: String) {

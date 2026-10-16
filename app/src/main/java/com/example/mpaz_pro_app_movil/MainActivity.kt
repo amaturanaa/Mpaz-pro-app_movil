@@ -13,9 +13,8 @@ import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
 import com.example.mpaz_pro_app_movil.screens.UtpScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
 
-// =============================================
+
 // ACTIVIDAD PRINCIPAL: PUNTO DE ENTRADA DE LA APP
-// =============================================
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,9 +29,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// =============================================
+
 // CONTROLADOR DE ACCESO A LAS TRES VISTAS
-// =============================================
 @Composable
 fun AplicacionMPAZ() {
 

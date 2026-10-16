@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.components.CampoValidado
 import com.example.mpaz_pro_app_movil.components.MensajeError
-import com.example.mpaz_pro_app_movil.datos.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
 import com.example.mpaz_pro_app_movil.ui.theme.FondoTarjetas
 import com.example.mpaz_pro_app_movil.validacion.Validador
 

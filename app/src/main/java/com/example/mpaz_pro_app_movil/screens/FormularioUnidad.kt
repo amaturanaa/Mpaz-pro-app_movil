@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.components.CampoValidado
 import com.example.mpaz_pro_app_movil.components.MensajeError
 import com.example.mpaz_pro_app_movil.datos.DatosPrueba
-import com.example.mpaz_pro_app_movil.datos.EstadoUnidad
-import com.example.mpaz_pro_app_movil.datos.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.validacion.Validador
 
 // =============================================

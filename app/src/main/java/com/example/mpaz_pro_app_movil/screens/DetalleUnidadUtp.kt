@@ -42,10 +42,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.components.EtiquetaEstado
-import com.example.mpaz_pro_app_movil.datos.EstadoUnidad
-import com.example.mpaz_pro_app_movil.datos.Pregunta
-import com.example.mpaz_pro_app_movil.datos.Unidad
-import com.example.mpaz_pro_app_movil.datos.siguientesPermitidos
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
+import com.example.mpaz_pro_app_movil.datos.model.siguientesPermitidos
 import com.example.mpaz_pro_app_movil.ui.theme.AzulPrincipal
 import com.example.mpaz_pro_app_movil.ui.theme.FondoTarjetas
 import com.example.mpaz_pro_app_movil.ui.theme.GrisBorde
