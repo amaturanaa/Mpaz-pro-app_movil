@@ -8,10 +8,10 @@ Aplicaciones Móviles, Duoc UC.
 
 ## Integrantes
 
-| Integrante | Responsabilidad principal |
+| Integrante |
 |---|---|
-| Alejandro Maturana | Perfiles UTP y Docente, modelo de datos y persistencia (Room), asignaciones, informes, validaciones centralizadas y notificaciones |
-| Sofía Mellado | Inicio de sesión y navegación, perfil del estudiante, pruebas, texto a voz y cámara |
+| Alejandro Maturana |
+| Sofía Mellado |
 
 ## Descripción del proyecto
 
