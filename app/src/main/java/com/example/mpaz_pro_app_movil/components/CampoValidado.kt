@@ -3,6 +3,7 @@ package com.example.mpaz_pro_app_movil.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.KeyboardType
 import com.example.mpaz_pro_app_movil.ui.theme.VerdePrincipal
 
 // =============================================
@@ -31,6 +33,7 @@ import com.example.mpaz_pro_app_movil.ui.theme.VerdePrincipal
 // error        : mensaje de error (null = no mostrar error)
 // correcto     : true si el valor ya cumple las reglas
 // ayuda        : texto gris de apoyo (se oculta si hay error)
+// teclado      : tipo de teclado (texto normal o numérico)
 @Composable
 fun CampoValidado(
     valor: String,
@@ -42,7 +45,8 @@ fun CampoValidado(
     modifier: Modifier = Modifier,
     ayuda: String? = null,
     unaLinea: Boolean = true,
-    lineasMinimas: Int = 1
+    lineasMinimas: Int = 1,
+    teclado: KeyboardType = KeyboardType.Text
 ) {
     // Si hay error se muestra el error; si no, la ayuda (si existe).
     val textoApoyo = error ?: ayuda
@@ -82,6 +86,7 @@ fun CampoValidado(
         isError = error != null,
         singleLine = unaLinea,
         minLines = lineasMinimas,
+        keyboardOptions = KeyboardOptions(keyboardType = teclado),
         supportingText = {
             // AnimatedContent: el texto de abajo se funde con el nuevo
             // cuando cambia (de ayuda a error, o al revés).

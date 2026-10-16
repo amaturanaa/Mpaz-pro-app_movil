@@ -3,6 +3,7 @@ package com.example.mpaz_pro_app_movil.datos
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import org.json.JSONArray
+import androidx.room.ColumnInfo
 
 // =============================================
 // TABLAS DE LA BASE DE DATOS (Room)
@@ -92,7 +93,10 @@ data class AsignacionEntidad(
     // Fechas en texto ISO: "2026-12-15"
     val fechaInicio: String,
     val fechaFin: String,
-    val maxIntentos: Int
+    val maxIntentos: Int,
+    // Room guarda los Boolean como 1 (sí) o 0 (no).
+    @ColumnInfo(defaultValue = "1") val notificarCurso: Boolean,
+    @ColumnInfo(defaultValue = "1") val permitirVerRespuestas: Boolean
 )
 
 fun Asignacion.aEntidad() = AsignacionEntidad(
@@ -101,7 +105,9 @@ fun Asignacion.aEntidad() = AsignacionEntidad(
     curso = curso,
     fechaInicio = fechaInicio,
     fechaFin = fechaFin,
-    maxIntentos = maxIntentos
+    maxIntentos = maxIntentos,
+    notificarCurso = notificarCurso,
+    permitirVerRespuestas = permitirVerRespuestas
 )
 
 fun AsignacionEntidad.aModelo() = Asignacion(
@@ -110,7 +116,9 @@ fun AsignacionEntidad.aModelo() = Asignacion(
     curso = curso,
     fechaInicio = fechaInicio,
     fechaFin = fechaFin,
-    maxIntentos = maxIntentos
+    maxIntentos = maxIntentos,
+    notificarCurso = notificarCurso,
+    permitirVerRespuestas = permitirVerRespuestas
 )
 
 // ---------- OBSERVACIONES DEL DOCENTE ----------

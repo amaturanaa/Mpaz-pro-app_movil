@@ -54,7 +54,9 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
         curso: String,
         inicioVisible: String,
         finVisible: String,
-        maxIntentos: Int
+        maxIntentos: Int,
+        notificarCurso: Boolean = true,
+        permitirVerRespuestas: Boolean = true
     ): String? {
         val unidad = unidadPorId(unidadId) ?: return "La unidad ya no existe."
 
@@ -81,13 +83,18 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
             curso = curso,
             fechaInicio = inicio,
             fechaFin = fin,
-            maxIntentos = maxIntentos
+            maxIntentos = maxIntentos,
+            notificarCurso = notificarCurso,
+            permitirVerRespuestas = permitirVerRespuestas
         )
         val esLaPrimeraAsignacion = AlmacenMpaz.asignaciones.none { it.unidadId == unidadId }
         AlmacenMpaz.asignaciones.add(nueva)
 
         // La prueba del estudiante consulta este mismo límite.
         ConfigPruebas.guardarMaxIntentos(getApplication(), unidad.asignatura, maxIntentos)
+        ConfigPruebas.guardarPermitirVerRespuestas(
+            getApplication(), unidad.asignatura, permitirVerRespuestas
+        )
 
         // Primera vez que se asigna esta unidad: el conteo parte desde cero.
         if (esLaPrimeraAsignacion) {

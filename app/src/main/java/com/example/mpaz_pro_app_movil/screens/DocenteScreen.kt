@@ -178,32 +178,44 @@ fun DocenteScreen(
                     1 -> FormularioAsignacion(
                         unidades = viewModel.unidadesPublicadas,
                         cursos = ConfigPruebas.cursos,
-                        onAsignar = { unidad, curso, inicio, fin, intentos ->
+                        onAsignar = { unidad, curso, inicio, fin, intentos, notificar, verRespuestas ->
                             val error = viewModel.asignar(
                                 unidadId = unidad.id,
                                 curso = curso,
                                 inicioVisible = inicio,
                                 finVisible = fin,
-                                maxIntentos = intentos
+                                maxIntentos = intentos,
+                                notificarCurso = notificar,
+                                permitirVerRespuestas = verRespuestas
                             )
 
                             if (error == null) {
-                                val aviso = AvisoAsignacion(unidad.titulo, curso, fin)
                                 pestana = 0
 
-                                if (Notificador.necesitaPedirPermiso(context)) {
-                                    // Android 13 o más: primero se pide el permiso.
-                                    avisoPendiente = aviso
-                                    lanzadorPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    val mostrado = Notificador.avisarAsignacion(
-                                        context, aviso.titulo, aviso.curso, aviso.fin
-                                    )
+                                if (!notificar) {
+                                    // El docente eligió no avisar al curso.
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
-                                            if (mostrado) "Unidad asignada. Aviso enviado."
-                                            else "Unidad asignada. Los avisos están desactivados."
+                                            "Unidad asignada. No se envió aviso."
                                         )
+                                    }
+                                } else {
+                                    val aviso = AvisoAsignacion(unidad.titulo, curso, fin)
+
+                                    if (Notificador.necesitaPedirPermiso(context)) {
+                                        // Android 13 o más: primero se pide el permiso.
+                                        avisoPendiente = aviso
+                                        lanzadorPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        val mostrado = Notificador.avisarAsignacion(
+                                            context, aviso.titulo, aviso.curso, aviso.fin
+                                        )
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                if (mostrado) "Unidad asignada. Aviso enviado."
+                                                else "Unidad asignada. Los avisos están desactivados."
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -285,7 +297,9 @@ private fun UnidadesDocente(
                             text = "Asignada a ${asignacion.curso}: " +
                                     "${Fechas.aVisible(asignacion.fechaInicio)} al " +
                                     "${Fechas.aVisible(asignacion.fechaFin)} · " +
-                                    "${asignacion.maxIntentos} intento(s)",
+                                    "${asignacion.maxIntentos} intento(s)" +
+                                    (if (asignacion.permitirVerRespuestas) ""
+                                    else " · sin revisión de respuestas"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = VerdePrincipal
                         )

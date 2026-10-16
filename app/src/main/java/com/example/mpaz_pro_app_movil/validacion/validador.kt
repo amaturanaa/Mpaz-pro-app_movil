@@ -130,4 +130,14 @@ object Validador {
             else -> null
         }
     }
+
+    // Lo mismo, pero para el campo donde la persona escribe el número.
+    fun intentosEscritos(texto: String): String? {
+        val limpio = texto.trim()
+        return when {
+            limpio.isEmpty() -> "Escribe cuántos intentos se permiten."
+            limpio.any { !it.isDigit() } -> "Escribe solo números, sin letras ni signos."
+            else -> intentos(limpio.toIntOrNull())
+        }
+    }
 }
