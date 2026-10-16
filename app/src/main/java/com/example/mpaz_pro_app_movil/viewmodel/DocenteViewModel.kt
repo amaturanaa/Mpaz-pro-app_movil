@@ -83,10 +83,16 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
             fechaFin = fin,
             maxIntentos = maxIntentos
         )
+        val esLaPrimeraAsignacion = AlmacenMpaz.asignaciones.none { it.unidadId == unidadId }
         AlmacenMpaz.asignaciones.add(nueva)
 
         // La prueba del estudiante consulta este mismo límite.
         ConfigPruebas.guardarMaxIntentos(getApplication(), unidad.asignatura, maxIntentos)
+
+        // Primera vez que se asigna esta unidad: el conteo parte desde cero.
+        if (esLaPrimeraAsignacion) {
+            ConfigPruebas.reiniciarResultados(getApplication(), unidad.asignatura)
+        }
 
         return if (AlmacenMpaz.guardarAsignaciones(getApplication())) null else mensajeNoGuardo
     }

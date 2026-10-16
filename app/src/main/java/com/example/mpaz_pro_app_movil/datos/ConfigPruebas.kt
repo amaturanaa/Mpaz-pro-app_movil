@@ -35,6 +35,19 @@ object ConfigPruebas {
             .apply()
     }
 
+    // Deja la prueba de esa asignatura como nueva: 0 intentos usados y sin
+    // notas. No toca el máximo de intentos. Se usa al asignar una unidad
+    // por primera vez, para que el conteo parta desde cero.
+    fun reiniciarResultados(context: Context, asignatura: String) {
+        val archivo = archivoDe(asignatura) ?: return
+        context.applicationContext
+            .getSharedPreferences(archivo, Context.MODE_PRIVATE)
+            .edit()
+            .putInt("intentos_usados", 0)
+            .putString("historial_notas", "")
+            .apply()
+    }
+
     // Intentos que el estudiante ya terminó en esa asignatura.
     fun intentosUsados(context: Context, asignatura: String): Int {
         val archivo = archivoDe(asignatura) ?: return 0
