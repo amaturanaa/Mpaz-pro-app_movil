@@ -60,7 +60,11 @@ data class Asignacion(
     val curso: String,
     val fechaInicio: String,
     val fechaFin: String,
-    val maxIntentos: Int
+    val maxIntentos: Int,
+    // Si el docente quiere avisar al curso con una notificación.
+    val notificarCurso: Boolean = true,
+    // Si el estudiante puede revisar sus respuestas después de la prueba.
+    val permitirVerRespuestas: Boolean = true
 )
 
 // El resultado de un intento de la prueba final.

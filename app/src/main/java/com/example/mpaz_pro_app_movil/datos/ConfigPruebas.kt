@@ -35,6 +35,25 @@ object ConfigPruebas {
             .apply()
     }
 
+    // Deja guardado si el estudiante puede revisar sus respuestas
+    // después de rendir la prueba.
+    fun guardarPermitirVerRespuestas(context: Context, asignatura: String, permitir: Boolean) {
+        val archivo = archivoDe(asignatura) ?: return
+        context.applicationContext
+            .getSharedPreferences(archivo, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("permitir_ver_respuestas", permitir)
+            .apply()
+    }
+
+    // true si el estudiante puede revisar sus respuestas (por defecto, sí).
+    fun verRespuestasPermitido(context: Context, asignatura: String): Boolean {
+        val archivo = archivoDe(asignatura) ?: return true
+        return context.applicationContext
+            .getSharedPreferences(archivo, Context.MODE_PRIVATE)
+            .getBoolean("permitir_ver_respuestas", true)
+    }
+
     // Deja la prueba de esa asignatura como nueva: 0 intentos usados y sin
     // notas. No toca el máximo de intentos. Se usa al asignar una unidad
     // por primera vez, para que el conteo parta desde cero.
