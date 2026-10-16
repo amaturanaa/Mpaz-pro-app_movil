@@ -88,3 +88,17 @@ abstract class ObservacionDao {
         insertar(observaciones)
     }
 }
+
+
+@Dao
+abstract class UsuarioDao {
+
+    @Query("SELECT * FROM usuarios WHERE usuario = :usuario LIMIT 1")
+    abstract suspend fun buscar(usuario: String): UsuarioEntidad?
+
+    @Query("SELECT COUNT(*) FROM usuarios")
+    abstract suspend fun cantidad(): Int
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertar(usuarios: List<UsuarioEntidad>)
+}

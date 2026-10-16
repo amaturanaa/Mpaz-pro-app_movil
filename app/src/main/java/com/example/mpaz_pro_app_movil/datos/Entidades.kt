@@ -146,3 +146,16 @@ fun ObservacionEntidad.aModelo() = Observacion(
     texto = texto,
     fecha = fecha
 )
+
+
+// ---------- USUARIOS (inicio de sesión) ----------
+// La contraseña nunca se guarda: solo su versión cifrada y la sal que se usó.
+@Entity(tableName = "usuarios")
+data class UsuarioEntidad(
+    // Siempre en minúsculas, para que "UTP" y "utp" sean la misma cuenta.
+    @PrimaryKey val usuario: String,
+    val nombre: String,
+    val rol: String,
+    val sal: String,
+    val claveCifrada: String
+)

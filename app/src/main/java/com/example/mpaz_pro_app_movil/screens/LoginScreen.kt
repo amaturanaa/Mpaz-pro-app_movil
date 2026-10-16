@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.auth.AutenticacionDemo
 import com.example.mpaz_pro_app_movil.auth.RolUsuario
@@ -47,6 +49,12 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
     var errorContrasena by remember { mutableStateOf(false) }
     var mensajeError by remember { mutableStateOf<String?>(null) }
 
+    // Para consultar la base de datos sin congelar la pantalla.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var comprobando by remember { mutableStateOf(false) }
+
+
     // Esta función se ejecuta al tocar "Iniciar sesión"
     // o al presionar Listo en el teclado del teléfono.
     fun intentarIngresar() {
@@ -61,22 +69,31 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
             return
         }
 
-        // Buscamos la cuenta que coincida con el rol elegido,
-        // el usuario y la contraseña exacta.
-        val cuenta = AutenticacionDemo.validar(
-            rolSeleccionado = rolSeleccionado,
-            usuarioIngresado = usuario,
-            contrasenaIngresada = contrasena
-        )
+        // Evita enviar dos veces si se toca el botón mientras se comprueba.
+        if (comprobando) return
+        comprobando = true
 
-        if (cuenta == null) {
-            // Credenciales erróneas o perfil incorrecto:
-            // NO se permite acceder a ninguna pantalla.
-            mensajeError = "Perfil, usuario o contraseña incorrectos."
-        } else {
-            // Inicio de sesión correcto: avisamos al contenedor.
-            mensajeError = null
-            onIngresar(cuenta)
+        // Buscamos la cuenta en la base de datos local. La contraseña escrita
+        // se cifra y se compara con la cifrada que está guardada.
+        // Se hace en segundo plano para no congelar la pantalla.
+        scope.launch {
+            val cuenta = AutenticacionDemo.validar(
+                contexto = context,
+                rolSeleccionado = rolSeleccionado,
+                usuarioIngresado = usuario,
+                contrasenaIngresada = contrasena
+            )
+            comprobando = false
+
+            if (cuenta == null) {
+                // Credenciales erróneas o perfil incorrecto:
+                // NO se permite acceder a ninguna pantalla.
+                mensajeError = "Perfil, usuario o contraseña incorrectos."
+            } else {
+                // Inicio de sesión correcto: avisamos al contenedor.
+                mensajeError = null
+                onIngresar(cuenta)
+            }
         }
     }
 

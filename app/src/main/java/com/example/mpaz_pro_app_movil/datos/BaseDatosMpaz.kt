@@ -10,21 +10,23 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 // =============================================
 // BASE DE DATOS LOCAL DE LA APP (Room)
 // =============================================
-// Reúne las cuatro tablas y los DAOs para consultarlas.
+// Reúne las tablas y los DAOs para consultarlas.
 // El archivo "mpaz_pro.db" queda en la carpeta privada de la app,
 // así que los datos sobreviven aunque se cierre la aplicación.
 //
-// Versión 1: las cuatro tablas.
+// Versión 1: unidades, preguntas, asignaciones y observaciones.
 // Versión 2: las asignaciones guardan si se avisa al curso y si el
 //            estudiante puede ver sus respuestas.
+// Versión 3: tabla de usuarios para el inicio de sesión (clave cifrada).
 @Database(
     entities = [
         UnidadEntidad::class,
         PreguntaEntidad::class,
         AsignacionEntidad::class,
-        ObservacionEntidad::class
+        ObservacionEntidad::class,
+        UsuarioEntidad::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class BaseDatosMpaz : RoomDatabase() {
@@ -33,11 +35,12 @@ abstract class BaseDatosMpaz : RoomDatabase() {
     abstract fun preguntaDao(): PreguntaDao
     abstract fun asignacionDao(): AsignacionDao
     abstract fun observacionDao(): ObservacionDao
+    abstract fun usuarioDao(): UsuarioDao
 
     companion object {
 
-        // Pasa de la versión 1 a la 2 sin borrar nada: agrega las dos
-        // columnas nuevas y las asignaciones antiguas quedan con "sí" (1).
+        // Versión 1 -> 2: agrega dos columnas a las asignaciones; las que ya
+        // existían quedan con "sí" (1).
         private val MIGRACION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
@@ -47,6 +50,21 @@ abstract class BaseDatosMpaz : RoomDatabase() {
                 db.execSQL(
                     "ALTER TABLE asignaciones " +
                             "ADD COLUMN permitirVerRespuestas INTEGER NOT NULL DEFAULT 1"
+                )
+            }
+        }
+
+        // Versión 2 -> 3: crea la tabla de usuarios. No toca ninguna otra.
+        private val MIGRACION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS usuarios (" +
+                            "usuario TEXT NOT NULL, " +
+                            "nombre TEXT NOT NULL, " +
+                            "rol TEXT NOT NULL, " +
+                            "sal TEXT NOT NULL, " +
+                            "claveCifrada TEXT NOT NULL, " +
+                            "PRIMARY KEY(usuario))"
                 )
             }
         }
@@ -62,7 +80,7 @@ abstract class BaseDatosMpaz : RoomDatabase() {
                     BaseDatosMpaz::class.java,
                     "mpaz_pro.db"
                 )
-                    .addMigrations(MIGRACION_1_2)
+                    .addMigrations(MIGRACION_1_2, MIGRACION_2_3)
                     .build()
                     .also { instancia = it }
             }
