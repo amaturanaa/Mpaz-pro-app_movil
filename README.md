@@ -8,8 +8,10 @@ Aplicaciones Móviles, Duoc UC.
 
 ## Integrantes
 
-- Sofía Mellado
-- Alejandro Maturana
+| Integrante | Responsabilidad principal |
+|---|---|
+| Alejandro Maturana | Perfiles UTP y Docente, modelo de datos y persistencia (Room), asignaciones, informes, validaciones centralizadas y notificaciones |
+| Sofía Mellado | Inicio de sesión y navegación, perfil del estudiante, pruebas, texto a voz y cámara |
 
 ## Descripción del proyecto
 
@@ -19,9 +21,9 @@ en papel y no existe un registro del avance de cada estudiante por objetivo de
 aprendizaje.
 
 MPAZ PRO 2.º reemplaza ese proceso por una aplicación que organiza unidades
-didácticas de las cuatro asignaturas del nivel, con texto breve, imágenes de
-apoyo y audio. La app permite publicar contenidos, asignarlos a un curso, rendir
-actividades y pruebas, y revisar el avance de cada estudiante.
+didácticas de las cuatro asignaturas del nivel, con explicaciones breves y
+lectura en voz alta. La app permite publicar contenidos, asignarlos a un curso,
+rendir pruebas y revisar los resultados.
 
 Corresponde a un Producto Mínimo Viable (MVP). Es una herramienta de apoyo y no
 reemplaza la labor ni la evaluación del docente.
@@ -37,82 +39,150 @@ reemplaza la labor ni la evaluación del docente.
 
 ### Jefatura UTP
 
-- Crea y edita unidades con su objetivo de aprendizaje, explicación y ejemplo guiado.
-- Crea las preguntas de práctica y de prueba final de cada unidad.
+- Crea y edita unidades con su código OA, objetivo de aprendizaje, explicación
+  y ejemplo.
+- Crea y elimina las preguntas de cada unidad (cuatro alternativas, una correcta).
 - Controla el estado de cada unidad: Borrador, En revisión, Autorizado,
   Publicado y Deshabilitado.
 
 ### Docente
 
-- Consulta las unidades publicadas por la UTP.
-- Asigna unidades al curso y define el rango de fechas de disponibilidad.
-- Configura el número máximo de intentos de la prueba final.
+- Consulta solo las unidades que la UTP ya publicó.
+- Asigna unidades a un curso y define el rango de fechas de disponibilidad.
+- Configura el número máximo de intentos (de 1 a 3), que se aplica a la prueba
+  del estudiante.
+- Recibe una notificación al asignar una unidad.
+- Revisa el informe de intentos, notas y promedio, visible solo para este perfil.
 - Registra observaciones pedagógicas por estudiante.
-- Revisa el informe de rendimiento, visible solo para este perfil.
 
 ### Estudiante
 
-- Ingresa a su perfil de prueba y ve solo las unidades asignadas.
-- Lee explicaciones breves, ve imágenes de apoyo y escucha el contenido en audio.
-- Resuelve actividades de práctica con respuesta inmediata.
-- Rinde la prueba final dentro de los intentos permitidos.
-- Revisa sus respuestas correctas e incorrectas.
-- No tiene acceso a informes pedagógicos.
+- Ingresa a su perfil de prueba.
+- Lee las explicaciones de cada asignatura y las escucha en voz alta.
+- Rinde la prueba final de cada asignatura dentro de los intentos permitidos.
+- Recibe su nota en escala de 1,0 a 7,0 y puede revisar sus respuestas.
+- Realiza una actividad con la cámara en Ciencias Naturales (animales).
+- Ve su avance. No tiene acceso a informes pedagógicos.
+
+### Cuentas de prueba
+
+Al iniciar sesión se elige el perfil y se ingresa el usuario y la contraseña.
+Son datos ficticios, solo para probar la aplicación.
+
+| Perfil | Usuario | Contraseña |
+|---|---|---|
+| Alumno | `alumno` | `Alumno123!` |
+| Docente | `docente` | `Docente123!` |
+| UTP | `utp` | `Utp12345!` |
 
 ## Funcionalidades implementadas
 
-- Inicio de sesión con redirección según el perfil del usuario.
-- Navegación entre pantallas con botón para volver y cierre de sesión.
-- Formularios con validación por campo, íconos y mensajes de error visibles.
-- Validaciones centralizadas en la lógica, separadas de los componentes visuales.
-- Gestión de unidades y preguntas con control de estados de publicación.
-- Asignación de unidades con fechas y máximo de intentos.
-- Actividades de práctica y prueba final con resultado detallado.
-- Informe pedagógico reservado al perfil docente.
-- Guardado del progreso en una base de datos local.
-- Animaciones en transiciones de pantalla, mensajes de error y barras de progreso.
-- Uso de recursos nativos del dispositivo.
+- **Inicio de sesión** con redirección según el perfil del usuario y cierre de sesión.
+- **Navegación** entre pantallas: barra inferior, menú lateral y botón para volver.
+- **Formularios con validación por campo**, ícono, indicador de campo correcto y
+  mensaje de error visible: unidad, pregunta, asignación y observación.
+- **Validaciones centralizadas** en un solo objeto (`Validador`) y en `Fechas`,
+  separadas de los componentes visuales.
+- **Gestión de unidades y preguntas** con control de estados de publicación.
+- **Asignación de unidades** con fechas y máximo de intentos.
+- **Pruebas finales** con intentos limitados, nota en escala chilena y revisión
+  de respuestas.
+- **Informe pedagógico** reservado al perfil docente.
+- **Persistencia local con Room**: lo que se crea sobrevive al cerrar la app.
+- **Animaciones** en los mensajes de error y en los íconos de los formularios, y
+  en la barra de progreso de la actividad con cámara.
+- **Recursos nativos** del dispositivo (ver más abajo).
+
+### Reglas que la aplicación hace cumplir
+
+| Regla | Dónde se aplica |
+|---|---|
+| Una unidad sin preguntas no puede pasar a revisión | UTP |
+| Los estados siguen el orden Borrador → En revisión → Autorizado → Publicado → Deshabilitado; no se pueden saltar pasos | UTP |
+| Una unidad publicada no se puede editar ni cambiar sus preguntas | UTP |
+| El código OA debe tener el formato `OA-XXX-00` y no puede repetirse | UTP |
+| Solo se pueden asignar unidades publicadas | Docente |
+| No se puede asignar la misma unidad dos veces al mismo curso | Docente |
+| La fecha de término no puede ser anterior a la de inicio ni a la de hoy | Docente |
+| El máximo de intentos va de 1 a 3 | Docente |
+| Cuando el estudiante agota sus intentos, no puede volver a rendir la prueba | Estudiante |
+| Solo se puede comentar una unidad que ya fue asignada | Docente |
+| Los informes solo se ven en el perfil docente y muestran códigos de estudiante, nunca nombres ni RUT | Docente |
 
 ## Recursos nativos
 
 | Recurso | Uso en la aplicación |
 |---|---|
-| Texto a voz | Lee en voz alta las explicaciones y las preguntas al estudiante. |
-| Notificaciones | Avisa cuando se asigna una unidad y cuando se guarda una prueba. |
+| Notificaciones | Avisa cuando el docente asigna una unidad a un curso. |
+| Texto a voz | Lee en voz alta las explicaciones al estudiante. |
+| Cámara | En la actividad de animales de Ciencias Naturales, el estudiante toma fotografías con la app de cámara del teléfono. |
 
 Las notificaciones solicitan permiso en Android 13 o superior. Si el permiso se
-niega, la aplicación sigue funcionando sin ese aviso.
+niega, la aplicación sigue funcionando sin ese aviso. La cámara se abre con la
+aplicación de cámara instalada en el teléfono y entrega la foto mediante un
+`FileProvider`, por eso no requiere el permiso `CAMERA`.
+
+## Persistencia de datos
+
+Los datos del perfil UTP y Docente se guardan en una base de datos **Room**
+(SQLite) con cuatro tablas:
+
+| Tabla | Contenido |
+|---|---|
+| `unidades` | Unidades didácticas y su estado |
+| `preguntas` | Preguntas de cada unidad |
+| `asignaciones` | Unidad asignada a un curso, con fechas y máximo de intentos |
+| `observaciones` | Comentarios del docente sobre un estudiante |
+
+La primera vez que se abre la aplicación se cargan unidades y preguntas de
+prueba. Después, todo lo que se crea o se modifica se guarda de inmediato.
+
+Los intentos usados y las notas de las pruebas del estudiante se guardan en
+`SharedPreferences`, un archivo por asignatura.
 
 ## Tecnologías
 
 - Kotlin
 - Android Studio
-- Jetpack Compose
+- Jetpack Compose (toda la interfaz se escribe en Kotlin, sin XML de pantallas)
 - Material Design 3
-- Arquitectura MVVM
-- SQLite para la persistencia local
+- Arquitectura MVVM en los perfiles UTP y Docente
+- Room (SQLite) con KSP para la persistencia local
+- SharedPreferences para los resultados de las pruebas
 - Git y GitHub para el control de versiones
 - Trello para la planificación
 
 ## Arquitectura
 
-El proyecto sigue el patrón MVVM y separa el código en tres capas:
-
 ```text
-app/src/main/java/.../
-├── data/
-│   ├── model/         Modelos de datos
-│   └── repository/    Acceso a la base de datos y a recursos del dispositivo
-├── viewmodel/         Estado de cada pantalla y reglas de validación
-└── ui/
-    ├── screens/       Pantallas de la aplicación
-    ├── components/    Componentes visuales reutilizables
-    └── theme/         Colores y tipografía
+app/src/main/java/com/example/mpaz_pro_app_movil/
+├── MainActivity.kt     Punto de entrada y acceso según el perfil
+├── auth/               Perfiles (RolUsuario) y cuentas de prueba
+├── components/         Componentes reutilizables (campo validado, etiqueta de estado)
+├── datos/              Modelos, base de datos Room (entidades y DAOs), repositorio
+├── notificaciones/     Aviso al asignar una unidad
+├── pruebas/            Las cuatro pruebas finales del estudiante
+├── screens/            Pantallas de los tres perfiles
+├── ui/theme/           Colores y tipografía
+├── validacion/         Validador central y manejo de fechas
+└── viewmodel/          Estado y reglas de los perfiles UTP y Docente
 ```
 
-- **data:** guarda y entrega la información.
-- **viewmodel:** contiene la lógica y expone el estado a la interfaz.
-- **ui:** muestra el estado y envía los eventos del usuario.
+Flujo de los datos en los perfiles UTP y Docente:
+
+```text
+Pantalla  →  ViewModel  →  AlmacenMpaz  →  RepositorioMpaz  →  DAO  →  Room
+ (muestra)   (reglas)      (listas que       (lee y guarda)            (SQLite)
+                            se redibujan)
+```
+
+- **screens y components:** muestran el estado y envían los eventos del usuario.
+- **viewmodel:** contiene las reglas (bloqueos, estados) y devuelve el motivo
+  cuando una acción no se puede realizar.
+- **datos:** guarda y entrega la información. `AlmacenMpaz` mantiene las listas
+  compartidas, de modo que lo que publica la UTP aparece en el perfil docente
+  sin reiniciar la aplicación.
+- **validacion:** reúne todas las validaciones en un solo lugar.
 
 ## Pasos para ejecutar
 
@@ -125,16 +195,37 @@ app/src/main/java/.../
 
 1. Clonar el repositorio:
 
-   ```bash
+```bash
    git clone https://github.com/amaturanaa/Mpaz-pro-app_movil.git
-   ```
+```
 
 2. Abrir Android Studio y seleccionar **File > Open**.
 3. Elegir la carpeta `Mpaz-pro-app_movil` y presionar **OK**.
 4. Esperar a que termine **Gradle Sync**.
 5. Seleccionar un emulador o conectar un dispositivo.
 6. Presionar **Run** para ejecutar el módulo `app`.
-7. En Android 13 o superior, aceptar el permiso de notificaciones.
+7. Iniciar sesión con una de las cuentas de prueba.
+8. En Android 13 o superior, aceptar el permiso de notificaciones.
+
+### Recorrido sugerido para probar
+
+1. Entrar como **UTP**, crear una unidad con una pregunta y pasarla hasta **Publicado**.
+2. Entrar como **Docente**, asignar la unidad a un curso y revisar la notificación.
+3. Entrar como **Alumno** y rendir una prueba.
+4. Volver como **Docente** y revisar el informe y las observaciones.
+
+## Limitaciones conocidas
+
+Es un MVP y estas partes quedan para una siguiente versión:
+
+- Las pruebas del estudiante son una por asignatura, con preguntas fijas. Todavía
+  no leen las preguntas que crea la UTP.
+- Como la prueba es una por asignatura, sus intentos y notas se comparten entre
+  todas las unidades de esa asignatura. Al asignar una unidad por primera vez, el
+  conteo de esa asignatura parte de cero.
+- Los intentos se guardan por instalación de la aplicación, no por estudiante.
+- No hay conexión con sistemas del colegio ni un servidor: todo funciona sin internet.
+- Las cuentas de inicio de sesión son de demostración.
 
 ## Datos y privacidad
 
