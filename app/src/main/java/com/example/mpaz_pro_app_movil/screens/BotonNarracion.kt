@@ -15,11 +15,23 @@ import androidx.compose.ui.platform.LocalContext
 import java.util.Locale
 
 /**
- * Botón independiente de texto a voz.
- * No cambia UnidadScreen ni las actividades de cada asignatura.
+ * Botón de texto a voz para las 4 asignaturas fijas.
+ * Lee la explicación y el ejemplo guardados para esa asignatura.
  */
 @Composable
 fun BotonNarracion(asignatura: String) {
+    BotonNarracionTexto(
+        "Explicación. ${explicacionDe(asignatura)}. " +
+                "Ejemplo. ${ejemploDe(asignatura)}"
+    )
+}
+
+/**
+ * Botón de texto a voz que lee el texto que se le entregue.
+ * Se usa para las unidades que crea la UTP.
+ */
+@Composable
+fun BotonNarracionTexto(texto: String) {
     val contexto = LocalContext.current
     var lector by remember(contexto) { mutableStateOf<TextToSpeech?>(null) }
     var vozLista by remember(contexto) { mutableStateOf(false) }
@@ -54,8 +66,6 @@ fun BotonNarracion(asignatura: String) {
                     aviso = "Instala o activa una voz en español en los ajustes del teléfono."
                 } else {
                     aviso = ""
-                    val texto = "Explicación. ${explicacionDe(asignatura)}. " +
-                            "Ejemplo. ${ejemploDe(asignatura)}"
                     motor.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "lectura_materia")
                 }
             }

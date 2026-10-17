@@ -80,6 +80,10 @@ fun UnidadPublicadaScreen(unidad: Unidad, onVolver: () -> Unit) {
             TarjetaContenido(titulo = "¿Qué vamos a aprender?", texto = unidad.objetivo)
             TarjetaContenido(titulo = "Lee y escucha", texto = unidad.explicacion)
             TarjetaContenido(titulo = "Ejemplo", texto = unidad.ejemplo)
+
+            BotonNarracionTexto(
+                "Explicación. ${unidad.explicacion}. Ejemplo. ${unidad.ejemplo}"
+            )
         }
     }
 }
