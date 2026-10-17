@@ -131,21 +131,21 @@ fun UnidadScreen(asignatura: String, onVolver: () -> Unit) {
             // Reproduce la explicación y el ejemplo en voz alta
             BotonNarracion(asignatura)
         }
-            // Por ahora no hace nada: aquí irá la vista de práctica
-            Button(onClick = { }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Filled.Star, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Practicar")
-            }
+        // Por ahora no hace nada: aquí irá la vista de práctica
+        Button(onClick = { }, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Filled.Star, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Practicar")
         }
     }
+}
 
 
 // Contenido de prueba. Después vendrá de la base de datos.
 fun explicacionDe(asignatura: String): String = when (asignatura) {
     "Lenguaje y Comunicación" ->
         "Una oración comunica una idea completa. Comienza con mayúscula y termina con un punto."
-    "Matemática" ->
+    "Matemáticas" ->
         "Sumar es juntar cantidades. Podemos contar hacia adelante para encontrar el total."
     "Ciencias Naturales" ->
         "Las plantas son seres vivos. Necesitan agua, luz y aire para crecer."
@@ -155,7 +155,7 @@ fun explicacionDe(asignatura: String): String = when (asignatura) {
 
 fun ejemploDe(asignatura: String): String = when (asignatura) {
     "Lenguaje y Comunicación" -> "\"El perro corre.\" tiene una idea completa."
-    "Matemática" -> "6 + 4 = 10. Desde 6 avanzamos cuatro números: 7, 8, 9 y 10."
+    "Matemáticas" -> "6 + 4 = 10. Desde 6 avanzamos cuatro números: 7, 8, 9 y 10."
     "Ciencias Naturales" -> "Una planta cerca de la ventana recibe luz y hay que regarla."
     else -> "La escuela, la plaza y el consultorio son lugares de la comunidad."
 }

@@ -28,6 +28,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+// ===== NUEVO: para leer las unidades que publica la UTP =====
+// LocalContext: le da a la pantalla el "contexto" del teléfono,
+// que se necesita para abrir la base de datos.
+import androidx.compose.ui.platform.LocalContext
+// AlmacenMpaz: la lista compartida donde la UTP guarda sus unidades.
+import com.example.mpaz_pro_app_movil.datos.repositorio.AlmacenMpaz
+// EstadoUnidad: para preguntar si una unidad está "PUBLICADO".
+import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+// Unidad: el "molde" de una unidad (título, objetivo, explicación...).
+import com.example.mpaz_pro_app_movil.datos.model.Unidad
+
 // Se utiliza para abrir y cerrar el menú lateral.
 import kotlinx.coroutines.launch
 
@@ -58,6 +69,20 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
     // null = no hay ninguna abierta. Si tiene un nombre, se muestra esa unidad.
     var asignaturaAbierta by remember { mutableStateOf<String?>(null) }
+
+    // ===== NUEVO =====
+    // Guarda la unidad publicada que el alumno tocó.
+    // null = no hay ninguna abierta.
+    var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
+
+    // ===== NUEVO =====
+    // Carga las unidades desde la base de datos del teléfono.
+    // La UTP y el docente ya lo hacían, pero el alumno NO,
+    // por eso su lista siempre estaba vacía.
+    // Si ya estaba cargado, esta línea no hace nada,
+    // así que no importa que se ejecute varias veces.
+    val contexto = LocalContext.current
+    AlmacenMpaz.iniciar(contexto)
 
     // Controla si el menú lateral está abierto o cerrado.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -217,7 +242,20 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                 when (pestana) {
                     // Pestaña 0: conservamos la pantalla de asignaturas.
                     0 -> {
-                        if (asignaturaAbierta != null) {
+                        // ===== NUEVO =====
+                        // Copiamos la unidad abierta en una variable fija
+                        // para que Kotlin sepa que no cambiará a mitad de camino.
+                        val unidadSeleccionada = unidadAbierta
+
+                        if (unidadSeleccionada != null) {
+                            // Si el alumno tocó una unidad publicada,
+                            // mostramos su contenido.
+                            UnidadPublicadaScreen(
+                                unidad = unidadSeleccionada,
+                                onVolver = { unidadAbierta = null }
+                            )
+                        }
+                        else if (asignaturaAbierta != null) {
                             // Hacemos esto para asegurarle a kotlin que la
                             // asignatura abierta tiene un valor
                             asignaturaAbierta?.let { asignaturaSeleccionada ->
@@ -237,6 +275,13 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                             ) {
                                 ContenidoAsignaturas(
                                     onAbrir = { asignatura -> asignaturaAbierta = asignatura }
+                                )
+
+                                // ===== NUEVO =====
+                                // Debajo de las 4 asignaturas mostramos
+                                // las unidades que la UTP publicó (ej: "Chani").
+                                UnidadesPublicadas(
+                                    onAbrirUnidad = { unidad -> unidadAbierta = unidad }
                                 )
                             }
                         }
@@ -273,32 +318,32 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 
 
 
-                                            when (pruebaSeleccionada) {
+                                    when (pruebaSeleccionada) {
 
-                                                // Si seleccionamos Lenguaje,
-                                                // mostramos sus cinco preguntas.
-                                                0 -> PruebaLenguaje()
+                                        // Si seleccionamos Lenguaje,
+                                        // mostramos sus cinco preguntas.
+                                        0 -> PruebaLenguaje()
 
-                                                // Si seleccionamos Matemática,
-                                                // mostramos la prueba de Matemática.
-                                                1 -> PruebaMatematicas()
+                                        // Si seleccionamos Matemática,
+                                        // mostramos la prueba de Matemática.
+                                        1 -> PruebaMatematicas()
 
-                                                // Si seleccionamos Ciencias Naturales,
-                                                // mostramos la prueba de Ciencias.
-                                                2 -> PruebaCiencias()
+                                        // Si seleccionamos Ciencias Naturales,
+                                        // mostramos la prueba de Ciencias.
+                                        2 -> PruebaCiencias()
 
-                                                // Si seleccionamos Historia,
-                                                // mostramos la prueba de Historia.
-                                                3 -> PruebaHistoria()
+                                        // Si seleccionamos Historia,
+                                        // mostramos la prueba de Historia.
+                                        3 -> PruebaHistoria()
 
-                                                // Si ocurre una selección desconocida,
-                                                // mostramos un mensaje.
-                                                else -> Text("Prueba no encontrada")
-                                            }
+                                        // Si ocurre una selección desconocida,
+                                        // mostramos un mensaje.
+                                        else -> Text("Prueba no encontrada")
+                                    }
 
 
 
-                                        }
+                                }
                             }
                         }
                     }
@@ -440,6 +485,71 @@ fun ContenidoAsignaturas(onAbrir: (String) -> Unit) {
                 color = TextoPrincipal,
                 modifier = Modifier.padding(20.dp)
             )
+        }
+    }
+}
+
+
+// =============================================
+// NUEVO: LISTA DE UNIDADES PUBLICADAS POR LA UTP
+// =============================================
+// Recibe una función que se ejecuta cuando el alumno toca una unidad.
+@Composable
+fun UnidadesPublicadas(onAbrirUnidad: (Unidad) -> Unit) {
+
+    // De TODAS las unidades, nos quedamos solo con las publicadas.
+    // Como AlmacenMpaz.unidades es una lista "observable", si la UTP
+    // publica o deshabilita algo, esta lista se actualiza sola.
+    val publicadas = AlmacenMpaz.unidades.filter { unidad ->
+        unidad.estado == EstadoUnidad.PUBLICADO
+    }
+
+    // Título de la sección.
+    Text(
+        text = "Unidades nuevas",
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+    )
+
+    // Si no hay ninguna publicada, avisamos en vez de dejar un hueco.
+    if (publicadas.isEmpty()) {
+        Text(
+            text = "Todavía no hay unidades publicadas.",
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+
+    // Creamos una tarjeta por cada unidad publicada.
+    publicadas.forEach { unidad ->
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+                // Al tocar la tarjeta, avisamos qué unidad se eligió.
+                .clickable { onAbrirUnidad(unidad) },
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = AzulClaro)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                // Asignatura en letra pequeña (ej: "Ciencias Naturales").
+                Text(
+                    text = unidad.asignatura,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextoPrincipal
+                )
+                // Título de la unidad en grande (ej: "Chani").
+                Text(
+                    text = unidad.titulo,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextoPrincipal
+                )
+                // Objetivo, para que el alumno sepa de qué trata.
+                Text(
+                    text = unidad.objetivo,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextoPrincipal
+                )
+            }
         }
     }
 }
