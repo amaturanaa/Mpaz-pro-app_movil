@@ -3,6 +3,18 @@ package com.example.mpaz_pro_app_movil.screens
 // =============================================
 // IMPORTACIONES PARA EL FORMULARIO DE INGRESO
 // =============================================
+// ===== NUEVO: herramientas de animación =====
+// AnimatedVisibility: muestra u oculta algo con animación.
+import androidx.compose.animation.AnimatedVisibility
+// Crossfade: funde un contenido con otro (texto del botón).
+import androidx.compose.animation.Crossfade
+// animateColorAsState: cambia un color poco a poco, no de golpe.
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,6 +65,33 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var comprobando by remember { mutableStateOf(false) }
+
+    // ===== NUEVO: COLORES ANIMADOS (animate*AsState) =====
+    // La tarjeta cambia de color según el rol elegido, así el niño
+    // ve claramente que tocó otra opción. El cambio dura 400 ms.
+    val colorTarjeta by animateColorAsState(
+        targetValue = when (rolSeleccionado) {
+            RolUsuario.ALUMNO -> Color(0xFFEDF5FF)   // celeste (el color original)
+            RolUsuario.DOCENTE -> Color(0xFFE8F5E9)  // verde claro
+            RolUsuario.UTP -> Color(0xFFFFF8E1)      // amarillo claro
+        },
+        animationSpec = tween(durationMillis = 400),
+        label = "colorTarjetaLogin"
+    )
+
+    // El botón se pone más claro mientras se revisa la contraseña.
+    val colorBoton by animateColorAsState(
+        targetValue = if (comprobando) Color(0xFF8FAEE0) else Color(0xFF3169C6),
+        animationSpec = tween(durationMillis = 250),
+        label = "colorBotonLogin"
+    )
+
+    // Guardamos el último mensaje de error para que el texto
+    // no desaparezca de golpe mientras se anima su salida.
+    var ultimoMensaje by remember { mutableStateOf("") }
+    LaunchedEffect(mensajeError) {
+        mensajeError?.let { ultimoMensaje = it }
+    }
 
 
     // Esta función se ejecuta al tocar "Iniciar sesión"
@@ -132,7 +171,8 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFEDF5FF)
+                // NUEVO: antes era un color fijo; ahora es el color animado.
+                containerColor = colorTarjeta
             )
         ) {
             Column(
@@ -222,10 +262,19 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     }
                 )
 
-                // El mensaje solo aparece cuando hay un error.
-                mensajeError?.let { mensaje ->
+                // ===== NUEVO: MENSAJE DE ERROR ANIMADO =====
+                // AnimatedVisibility: el mensaje aparece desplegándose
+                // hacia abajo y se va encogiéndose, en vez de saltar.
+                AnimatedVisibility(
+                    visible = mensajeError != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                    label = "mensajeErrorLogin"
+                ) {
                     Text(
-                        text = mensaje,
+                        // Mientras sale, mensajeError ya es null:
+                        // por eso usamos el último mensaje guardado.
+                        text = mensajeError ?: ultimoMensaje,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -236,10 +285,33 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     onClick = { intentarIngresar() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3169C6)
+                        // NUEVO: color animado del botón.
+                        containerColor = colorBoton
                     )
                 ) {
-                    Text("Iniciar sesión")
+                    // ===== NUEVO: TEXTO DEL BOTÓN CON CROSSFADE =====
+                    // Mientras se comprueba la clave, el texto se funde
+                    // con un circulito de carga y "Comprobando...".
+                    Crossfade(
+                        targetState = comprobando,
+                        label = "textoBotonLogin"
+                    ) { estaComprobando ->
+                        if (estaComprobando) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                                Text("Comprobando...")
+                            }
+                        } else {
+                            Text("Iniciar sesión")
+                        }
+                    }
                 }
             }
         }
