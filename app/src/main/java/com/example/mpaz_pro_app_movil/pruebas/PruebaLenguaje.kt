@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+// NUEVO (tarea 4): para saber si el docente permite revisar respuestas.
+import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -164,6 +166,14 @@ fun PruebaLenguaje() {
 
     // Permite mostrar u ocultar la revisión en la pantalla de resultado.
     var mostrarRevision by remember { mutableStateOf(false) }
+
+    // NUEVO (tarea 4): ¿el docente permite revisar las respuestas?
+    // Lo decide el Checkbox "Permitir ver respuestas" al asignar la unidad.
+    // Se lee una vez cada vez que se abre la prueba. Si el docente
+    // nunca lo configuró, ConfigPruebas responde true (sí se permite).
+    val puedeVerRespuestas = remember(context) {
+        ConfigPruebas.verRespuestasPermitido(context, "Lenguaje y Comunicación")
+    }
 
     // Nunca mostramos intentos restantes negativos.
     val intentosRestantes = (maxIntentos - intentosUsados).coerceAtLeast(0)
@@ -560,15 +570,27 @@ fun PruebaLenguaje() {
                     }
                 }
 
-                // Revisión con retroalimentación educativa, opcional.
-                OutlinedButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { mostrarRevision = !mostrarRevision }
-                ) {
-                    Text(if (mostrarRevision) "Ocultar respuestas" else "Revisar respuestas")
+                // NUEVO (tarea 4): el botón solo aparece si el docente lo permite.
+                // Si no, mostramos un aviso para que el niño sepa por qué no está.
+                if (puedeVerRespuestas) {
+                    // Revisión con retroalimentación educativa, opcional.
+                    OutlinedButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { mostrarRevision = !mostrarRevision }
+                    ) {
+                        Text(if (mostrarRevision) "Ocultar respuestas" else "Revisar respuestas")
+                    }
+                } else {
+                    Text(
+                        text = "Tu profesor no activó la revisión de respuestas para esta prueba.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textoSecundario
+                    )
                 }
 
-                if (mostrarRevision) {
+                // NUEVO (tarea 4): doble seguro, la revisión tampoco se dibuja
+                // si no está permitida.
+                if (mostrarRevision && puedeVerRespuestas) {
                     preguntas.forEachIndexed { indice, pregunta ->
                         val fueCorrecta = respuestas[indice] == pregunta.correcta
                         Card(
