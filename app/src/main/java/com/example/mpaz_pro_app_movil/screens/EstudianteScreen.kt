@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mpaz_pro_app_movil.viewmodel.EstudianteViewModel
 import com.example.mpaz_pro_app_movil.viewmodel.PruebaAlumno
+// NUEVO (tarea 3): unidad + datos de su asignación.
+import com.example.mpaz_pro_app_movil.viewmodel.UnidadAsignada
 // Unidad: el "molde" de una unidad (título, objetivo, explicación...).
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 
@@ -343,8 +345,10 @@ fun EstudianteScreen(
                                         // Debajo de las 4 asignaturas mostramos
                                         // las unidades que la UTP publicó (ej: "Chani").
                                         // NUEVO (MVVM): la lista ya filtrada viene del ViewModel.
+                                        // NUEVO (tarea 3): ahora solo trae las publicadas
+                                        // que el docente asignó.
                                         UnidadesPublicadas(
-                                            publicadas = viewModel.unidadesPublicadas,
+                                            asignadas = viewModel.unidadesAsignadas,
                                             onAbrirUnidad = { unidad -> unidadAbierta = unidad }
                                         )
                                     }
@@ -560,13 +564,14 @@ fun ContenidoAsignaturas(
 // =============================================
 // NUEVO: LISTA DE UNIDADES PUBLICADAS POR LA UTP
 // =============================================
-// publicadas   -> la lista YA filtrada por EstudianteViewModel
+// asignadas     -> la lista YA filtrada por EstudianteViewModel
+//                  (publicadas por la UTP Y asignadas por el docente)
 // onAbrirUnidad -> se ejecuta cuando el alumno toca una unidad
 // NUEVO (MVVM): antes esta función leía AlmacenMpaz y filtraba
 // por su cuenta. Ahora solo dibuja lo que le entregan.
 @Composable
 fun UnidadesPublicadas(
-    publicadas: List<Unidad>,
+    asignadas: List<UnidadAsignada>,
     onAbrirUnidad: (Unidad) -> Unit
 ) {
 
@@ -577,16 +582,18 @@ fun UnidadesPublicadas(
         modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
     )
 
-    // Si no hay ninguna publicada, avisamos en vez de dejar un hueco.
-    if (publicadas.isEmpty()) {
+    // NUEVO (tarea 3): si no hay ninguna asignada, avisamos con un
+    // mensaje que explica que falta el paso del profesor.
+    if (asignadas.isEmpty()) {
         Text(
-            text = "Todavía no hay unidades publicadas.",
+            text = "Tu profesor todavía no te ha asignado unidades.",
             style = MaterialTheme.typography.bodyMedium
         )
     }
 
-    // Creamos una tarjeta por cada unidad publicada.
-    publicadas.forEach { unidad ->
+    // Creamos una tarjeta por cada unidad asignada.
+    // "(unidad, cursos, fechaHasta)" saca los tres datos de UnidadAsignada.
+    asignadas.forEach { (unidad, cursos, fechaHasta) ->
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -613,6 +620,18 @@ fun UnidadesPublicadas(
                 Text(
                     text = unidad.objetivo,
                     style = MaterialTheme.typography.bodySmall,
+                    color = TextoPrincipal
+                )
+                // NUEVO (tarea 3): datos de la asignación del docente.
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Curso: ${cursos.joinToString(", ")}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextoPrincipal
+                )
+                Text(
+                    text = "Disponible hasta: $fechaHasta",
+                    style = MaterialTheme.typography.labelSmall,
                     color = TextoPrincipal
                 )
             }
