@@ -43,14 +43,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// ===== NUEVO: para leer las unidades que publica la UTP =====
-// LocalContext: le da a la pantalla el "contexto" del teléfono,
-// que se necesita para abrir la base de datos.
-import androidx.compose.ui.platform.LocalContext
-// AlmacenMpaz: la lista compartida donde la UTP guarda sus unidades.
-import com.example.mpaz_pro_app_movil.datos.repositorio.AlmacenMpaz
-// EstadoUnidad: para preguntar si una unidad está "PUBLICADO".
-import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+// ===== NUEVO (MVVM): la pantalla ya NO lee la base de datos =====
+// Antes aquí se importaban LocalContext, AlmacenMpaz y EstadoUnidad
+// para cargar y filtrar las unidades. Ahora eso lo hace el ViewModel.
+// viewModel(): crea el ViewModel la primera vez y luego reutiliza el mismo.
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mpaz_pro_app_movil.viewmodel.EstudianteViewModel
+import com.example.mpaz_pro_app_movil.viewmodel.PruebaAlumno
 // Unidad: el "molde" de una unidad (título, objetivo, explicación...).
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 
@@ -71,7 +70,12 @@ import com.example.mpaz_pro_app_movil.pruebas.PruebaHistoria
 // que todavía pueden estar marcados como experimentales.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EstudianteScreen(onCerrarSesion: () -> Unit) {
+fun EstudianteScreen(
+    onCerrarSesion: () -> Unit,
+    // NUEVO (MVVM): la pantalla recibe su ViewModel.
+    // MainActivity no cambia: si no se entrega uno, viewModel() lo crea solo.
+    viewModel: EstudianteViewModel = viewModel()
+) {
 
     // Indica qué pestaña principal está seleccionada:
     // 0 = Asignaturas, 1 = Pruebas, 2 = Avance.
@@ -90,14 +94,12 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
     // null = no hay ninguna abierta.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
-    // ===== NUEVO =====
-    // Carga las unidades desde la base de datos del teléfono.
-    // La UTP y el docente ya lo hacían, pero el alumno NO,
-    // por eso su lista siempre estaba vacía.
-    // Si ya estaba cargado, esta línea no hace nada,
-    // así que no importa que se ejecute varias veces.
-    val contexto = LocalContext.current
-    AlmacenMpaz.iniciar(contexto)
+    // NUEVO (MVVM): aquí antes se cargaba la base de datos con
+    // AlmacenMpaz.iniciar(contexto). Ahora lo hace el init
+    // de EstudianteViewModel, igual que en UTP y Docente.
+    //
+    // Las variables de arriba (pestana, pruebaSeleccionada, etc.) se quedan
+    // en la pantalla porque solo dicen QUÉ SE VE, no son datos de la app.
 
     // Controla si el menú lateral está abierto o cerrado.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -332,13 +334,17 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                                             .verticalScroll(rememberScrollState())
                                             .padding(16.dp)
                                     ) {
+                                        // NUEVO (MVVM): los nombres vienen del ViewModel.
                                         ContenidoAsignaturas(
+                                            asignaturas = viewModel.asignaturas,
                                             onAbrir = { asignatura -> asignaturaAbierta = asignatura }
                                         )
 
                                         // Debajo de las 4 asignaturas mostramos
                                         // las unidades que la UTP publicó (ej: "Chani").
+                                        // NUEVO (MVVM): la lista ya filtrada viene del ViewModel.
                                         UnidadesPublicadas(
+                                            publicadas = viewModel.unidadesPublicadas,
                                             onAbrirUnidad = { unidad -> unidadAbierta = unidad }
                                         )
                                     }
@@ -360,7 +366,9 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                                 label = "vistaPruebas"
                             ) { pruebaActual ->
                                 if (pruebaActual == -1) {
+                                    // NUEVO (MVVM): las 4 pruebas vienen del ViewModel.
                                     MenuDePruebas(
+                                        pruebas = viewModel.pruebas,
                                         onElegirPrueba = { numero ->
                                             pruebaSeleccionada = numero
                                         }
@@ -432,15 +440,12 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
 // No hace ni corrige preguntas aquí: eso ocurre dentro
 // de PruebaLenguaje, PruebaMatematicas, etc.
 @Composable
-private fun MenuDePruebas(onElegirPrueba: (Int) -> Unit) {
-
-    // Definimos los nombres y descripciones de las 4 pruebas.
-    val pruebas = listOf(
-        "Lenguaje" to "Gerundios · 5 preguntas",
-        "Matemática" to "Números y operaciones · 5 preguntas",
-        "Ciencias Naturales" to "Seres vivos y naturaleza · 5 preguntas",
-        "Historia" to "Chile y su entorno · 5 preguntas"
-    )
+private fun MenuDePruebas(
+    // NUEVO (MVVM): antes la lista estaba escrita aquí;
+    // ahora llega desde EstudianteViewModel.pruebas.
+    pruebas: List<PruebaAlumno>,
+    onElegirPrueba: (Int) -> Unit
+) {
 
     // Columna desplazable SOLO para el menú de selección.
     Column(
@@ -484,13 +489,13 @@ private fun MenuDePruebas(onElegirPrueba: (Int) -> Unit) {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = datos.first,
+                            text = datos.titulo,
                             style = MaterialTheme.typography.titleMedium,
                             color = TextoPrincipal
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = datos.second,
+                            text = datos.descripcion,
                             style = MaterialTheme.typography.bodySmall,
                             color = TextoPrincipal
                         )
@@ -513,16 +518,13 @@ private fun MenuDePruebas(onElegirPrueba: (Int) -> Unit) {
 // Conservamos la función para no modificar
 // tu diseño actual de las asignaturas.
 @Composable
-fun ContenidoAsignaturas(onAbrir: (String) -> Unit) {
+fun ContenidoAsignaturas(
+    // NUEVO (MVVM): los nombres llegan desde EstudianteViewModel.asignaturas.
+    asignaturas: List<String>,
+    onAbrir: (String) -> Unit
+) {
 
-    // Nombres de las cuatro asignaturas de 2.º básico.
-    val asignaturas = listOf(
-        "Lenguaje y Comunicación",
-        "Matemáticas",
-        "Ciencias Naturales",
-        "Historia, Geografía y Ciencias Sociales"
-    )
-
+    // Los colores SÍ se quedan aquí: son parte del diseño, no datos.
     // Colores originales definidos en ui.theme.
     val colores = listOf(
         RosadoClaro,
@@ -539,7 +541,8 @@ fun ContenidoAsignaturas(onAbrir: (String) -> Unit) {
                 .padding(bottom = 12.dp)
                 .clickable { onAbrir(asignatura) },
             colors = CardDefaults.cardColors(
-                containerColor = colores[indice]
+                // getOrElse evita un error si algún día hay más de 4 asignaturas.
+                containerColor = colores.getOrElse(indice) { AzulClaro }
             ),
             shape = RoundedCornerShape(18.dp)
         ) {
@@ -557,16 +560,15 @@ fun ContenidoAsignaturas(onAbrir: (String) -> Unit) {
 // =============================================
 // NUEVO: LISTA DE UNIDADES PUBLICADAS POR LA UTP
 // =============================================
-// Recibe una función que se ejecuta cuando el alumno toca una unidad.
+// publicadas   -> la lista YA filtrada por EstudianteViewModel
+// onAbrirUnidad -> se ejecuta cuando el alumno toca una unidad
+// NUEVO (MVVM): antes esta función leía AlmacenMpaz y filtraba
+// por su cuenta. Ahora solo dibuja lo que le entregan.
 @Composable
-fun UnidadesPublicadas(onAbrirUnidad: (Unidad) -> Unit) {
-
-    // De TODAS las unidades, nos quedamos solo con las publicadas.
-    // Como AlmacenMpaz.unidades es una lista "observable", si la UTP
-    // publica o deshabilita algo, esta lista se actualiza sola.
-    val publicadas = AlmacenMpaz.unidades.filter { unidad ->
-        unidad.estado == EstadoUnidad.PUBLICADO
-    }
+fun UnidadesPublicadas(
+    publicadas: List<Unidad>,
+    onAbrirUnidad: (Unidad) -> Unit
+) {
 
     // Título de la sección.
     Text(
