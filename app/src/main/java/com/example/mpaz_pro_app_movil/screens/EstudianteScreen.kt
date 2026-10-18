@@ -4,6 +4,21 @@ package com.example.mpaz_pro_app_movil.screens
 // IMPORTACIONES: HERRAMIENTAS PARA LA INTERFAZ
 // =============================================
 
+// ===== NUEVO: herramientas de animación =====
+// AnimatedContent: anima el cambio de una pantalla a otra.
+import androidx.compose.animation.AnimatedContent
+// Crossfade: funde el título de la barra superior.
+import androidx.compose.animation.Crossfade
+// animateFloatAsState + spring: el ícono de la pestaña elegida
+// crece con un pequeño "rebote".
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
+// Las transiciones compartidas (avanzar / retroceder).
+import com.example.mpaz_pro_app_movil.components.Transiciones
+
 // Nos permiten organizar elementos, crear espacios
 // y hacer que el menú de pruebas tenga desplazamiento.
 import androidx.compose.foundation.clickable
@@ -163,13 +178,20 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            when (pestana) {
-                                0 -> "Mis asignaturas"
-                                1 -> "Prueba final"
-                                else -> "Mi avance"
-                            }
-                        )
+                        // NUEVO: Crossfade funde el título viejo con el nuevo
+                        // cada vez que se cambia de pestaña.
+                        Crossfade(
+                            targetState = pestana,
+                            label = "tituloAlumno"
+                        ) { pestanaTitulo ->
+                            Text(
+                                when (pestanaTitulo) {
+                                    0 -> "Mis asignaturas"
+                                    1 -> "Prueba final"
+                                    else -> "Mi avance"
+                                }
+                            )
+                        }
                     },
                     actions = {
                         // Abre el menú lateral cuando se toca el icono.
@@ -197,7 +219,8 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                             pruebaSeleccionada = -1
                         },
                         icon = {
-                            Icon(Icons.Filled.Home, contentDescription = "Asignaturas")
+                            // NUEVO: ícono que crece cuando está seleccionado.
+                            IconoPestana(Icons.Filled.Home, "Asignaturas", pestana == 0)
                         },
                         label = { Text("Asignaturas") }
                     )
@@ -210,7 +233,7 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                             pruebaSeleccionada = -1
                         },
                         icon = {
-                            Icon(Icons.Filled.Edit, contentDescription = "Pruebas")
+                            IconoPestana(Icons.Filled.Edit, "Pruebas", pestana == 1)
                         },
                         label = { Text("Pruebas") }
                     )
@@ -222,7 +245,7 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                             pruebaSeleccionada = -1
                         },
                         icon = {
-                            Icon(Icons.Filled.Star, contentDescription = "Avance")
+                            IconoPestana(Icons.Filled.Star, "Avance", pestana == 2)
                         },
                         label = { Text("Avance") }
                     )
@@ -239,121 +262,162 @@ fun EstudianteScreen(onCerrarSesion: () -> Unit) {
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                when (pestana) {
-                    // Pestaña 0: conservamos la pantalla de asignaturas.
-                    0 -> {
-                        // ===== NUEVO =====
-                        // Copiamos la unidad abierta en una variable fija
-                        // para que Kotlin sepa que no cambiará a mitad de camino.
-                        val unidadSeleccionada = unidadAbierta
+                // =============================================
+                // NUEVO: CAMBIO ANIMADO ENTRE PESTAÑAS
+                // =============================================
+                // AnimatedContent compara la pestaña anterior (initialState)
+                // con la nueva (targetState):
+                //   - si la nueva está a la DERECHA (número mayor) -> avanzar
+                //   - si está a la IZQUIERDA (número menor)         -> retroceder
+                // Así el movimiento coincide con la barra inferior.
+                AnimatedContent(
+                    targetState = pestana,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = {
+                        Transiciones.lateral(haciaAdelante = targetState > initialState)
+                    },
+                    label = "pestanasAlumno"
+                ) { pestanaActual ->
+                    // IMPORTANTE: aquí adentro usamos pestanaActual y NO pestana,
+                    // porque durante la animación se dibujan DOS pestañas a la vez
+                    // (la que sale y la que entra).
+                    when (pestanaActual) {
+                        // Pestaña 0: conservamos la pantalla de asignaturas.
+                        0 -> {
+                            // Copiamos los valores en variables fijas
+                            // para que Kotlin sepa que no cambiarán a mitad de camino.
+                            val unidadSeleccionada = unidadAbierta
+                            val asignaturaSeleccionada = asignaturaAbierta
 
-                        if (unidadSeleccionada != null) {
-                            // Si el alumno tocó una unidad publicada,
-                            // mostramos su contenido.
-                            UnidadPublicadaScreen(
-                                unidad = unidadSeleccionada,
-                                onVolver = { unidadAbierta = null }
-                            )
-                        }
-                        else if (asignaturaAbierta != null) {
-                            // Hacemos esto para asegurarle a kotlin que la
-                            // asignatura abierta tiene un valor
-                            asignaturaAbierta?.let { asignaturaSeleccionada ->
-                                UnidadScreen(
-                                    asignatura = asignaturaSeleccionada,
-                                    onVolver = { asignaturaAbierta = null }
-                                )
+                            // NUEVO: resumimos en UN solo valor qué se está viendo.
+                            val vista = when {
+                                unidadSeleccionada != null ->
+                                    VistaAsignaturas.UnidadAbierta(unidadSeleccionada)
+                                asignaturaSeleccionada != null ->
+                                    VistaAsignaturas.AsignaturaAbierta(asignaturaSeleccionada)
+                                else -> VistaAsignaturas.Lista
                             }
 
-                        }
-                        else {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .verticalScroll(rememberScrollState())
-                                    .padding(16.dp)
-                            ) {
-                                ContenidoAsignaturas(
-                                    onAbrir = { asignatura -> asignaturaAbierta = asignatura }
-                                )
+                            // NUEVO: animamos el paso lista -> detalle -> lista.
+                            // Si vamos hacia la Lista es "volver" (retroceder);
+                            // si abrimos algo es "entrar" (avanzar).
+                            AnimatedContent(
+                                targetState = vista,
+                                modifier = Modifier.fillMaxSize(),
+                                transitionSpec = {
+                                    Transiciones.lateral(
+                                        haciaAdelante = targetState != VistaAsignaturas.Lista
+                                    )
+                                },
+                                label = "vistaAsignaturas"
+                            ) { vistaActual ->
+                                when (vistaActual) {
 
-                                // ===== NUEVO =====
-                                // Debajo de las 4 asignaturas mostramos
-                                // las unidades que la UTP publicó (ej: "Chani").
-                                UnidadesPublicadas(
-                                    onAbrirUnidad = { unidad -> unidadAbierta = unidad }
-                                )
-                            }
-                        }
-                    }
+                                    // El alumno tocó una unidad publicada.
+                                    is VistaAsignaturas.UnidadAbierta -> UnidadPublicadaScreen(
+                                        unidad = vistaActual.unidad,
+                                        onVolver = { unidadAbierta = null }
+                                    )
 
-                    // Pestaña 1: primero se muestra un listado.
-                    // Al elegir una asignatura se abre SU prueba.
-                    1 -> {
-                        if (pruebaSeleccionada == -1) {
-                            MenuDePruebas(
-                                onElegirPrueba = { numero ->
-                                    pruebaSeleccionada = numero
-                                }
-                            )
-                        } else {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                // Este botón vuelve al listado sin borrar
-                                // el historial de notas ni los intentos.
-                                TextButton(
-                                    onClick = { pruebaSeleccionada = -1 },
-                                    modifier = Modifier.padding(start = 8.dp)
-                                ) {
-                                    Text("← Volver a las cuatro pruebas")
-                                }
+                                    // El alumno tocó una de las 4 asignaturas.
+                                    is VistaAsignaturas.AsignaturaAbierta -> UnidadScreen(
+                                        asignatura = vistaActual.nombre,
+                                        onVolver = { asignaturaAbierta = null }
+                                    )
 
-                                // Cada prueba ocupa el espacio restante.
-                                // Se conserva su propia interfaz y scroll.
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f)
-                                ) {
+                                    // Lista principal: asignaturas + unidades nuevas.
+                                    VistaAsignaturas.Lista -> Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .verticalScroll(rememberScrollState())
+                                            .padding(16.dp)
+                                    ) {
+                                        ContenidoAsignaturas(
+                                            onAbrir = { asignatura -> asignaturaAbierta = asignatura }
+                                        )
 
-
-
-
-                                    when (pruebaSeleccionada) {
-
-                                        // Si seleccionamos Lenguaje,
-                                        // mostramos sus cinco preguntas.
-                                        0 -> PruebaLenguaje()
-
-                                        // Si seleccionamos Matemática,
-                                        // mostramos la prueba de Matemática.
-                                        1 -> PruebaMatematicas()
-
-                                        // Si seleccionamos Ciencias Naturales,
-                                        // mostramos la prueba de Ciencias.
-                                        2 -> PruebaCiencias()
-
-                                        // Si seleccionamos Historia,
-                                        // mostramos la prueba de Historia.
-                                        3 -> PruebaHistoria()
-
-                                        // Si ocurre una selección desconocida,
-                                        // mostramos un mensaje.
-                                        else -> Text("Prueba no encontrada")
+                                        // Debajo de las 4 asignaturas mostramos
+                                        // las unidades que la UTP publicó (ej: "Chani").
+                                        UnidadesPublicadas(
+                                            onAbrirUnidad = { unidad -> unidadAbierta = unidad }
+                                        )
                                     }
-
-
-
                                 }
                             }
                         }
-                    }
 
-                    // Pestaña 2: dejamos intacto el espacio para avance.
-                    2 -> Text(
-                        text = "Aquí va el avance del estudiante",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                        // Pestaña 1: primero se muestra un listado.
+                        // Al elegir una asignatura se abre SU prueba.
+                        1 -> {
+                            // NUEVO: -1 es el menú; 0 a 3 es una prueba.
+                            // Abrir una prueba = avanzar; volver al menú = retroceder.
+                            AnimatedContent(
+                                targetState = pruebaSeleccionada,
+                                modifier = Modifier.fillMaxSize(),
+                                transitionSpec = {
+                                    Transiciones.lateral(haciaAdelante = targetState != -1)
+                                },
+                                label = "vistaPruebas"
+                            ) { pruebaActual ->
+                                if (pruebaActual == -1) {
+                                    MenuDePruebas(
+                                        onElegirPrueba = { numero ->
+                                            pruebaSeleccionada = numero
+                                        }
+                                    )
+                                } else {
+                                    Column(modifier = Modifier.fillMaxSize()) {
+                                        // Este botón vuelve al listado sin borrar
+                                        // el historial de notas ni los intentos.
+                                        TextButton(
+                                            onClick = { pruebaSeleccionada = -1 },
+                                            modifier = Modifier.padding(start = 8.dp)
+                                        ) {
+                                            Text("← Volver a las cuatro pruebas")
+                                        }
+
+                                        // Cada prueba ocupa el espacio restante.
+                                        // Se conserva su propia interfaz y scroll.
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .weight(1f)
+                                        ) {
+                                            when (pruebaActual) {
+
+                                                // Si seleccionamos Lenguaje,
+                                                // mostramos sus cinco preguntas.
+                                                0 -> PruebaLenguaje()
+
+                                                // Si seleccionamos Matemática,
+                                                // mostramos la prueba de Matemática.
+                                                1 -> PruebaMatematicas()
+
+                                                // Si seleccionamos Ciencias Naturales,
+                                                // mostramos la prueba de Ciencias.
+                                                2 -> PruebaCiencias()
+
+                                                // Si seleccionamos Historia,
+                                                // mostramos la prueba de Historia.
+                                                3 -> PruebaHistoria()
+
+                                                // Si ocurre una selección desconocida,
+                                                // mostramos un mensaje.
+                                                else -> Text("Prueba no encontrada")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Pestaña 2: dejamos intacto el espacio para avance.
+                        else -> Text(
+                            text = "Aquí va el avance del estudiante",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -552,4 +616,50 @@ fun UnidadesPublicadas(onAbrirUnidad: (Unidad) -> Unit) {
             }
         }
     }
+}
+
+
+// =============================================
+// NUEVO: QUÉ SE VE EN LA PESTAÑA ASIGNATURAS
+// =============================================
+// Antes se usaban tres if/else (unidad, asignatura o lista).
+// Para animar el cambio, AnimatedContent necesita UN solo valor
+// que diga qué pantalla mostrar. Esta clase sellada es ese valor:
+// solo puede ser una de estas tres opciones.
+private sealed interface VistaAsignaturas {
+
+    // La lista principal con las 4 asignaturas y las unidades nuevas.
+    data object Lista : VistaAsignaturas
+
+    // Una de las 4 asignaturas abierta (ej: "Matemáticas").
+    data class AsignaturaAbierta(val nombre: String) : VistaAsignaturas
+
+    // Una unidad publicada por la UTP abierta.
+    data class UnidadAbierta(val unidad: Unidad) : VistaAsignaturas
+}
+
+
+// =============================================
+// NUEVO: ÍCONO DE PESTAÑA ANIMADO (animateFloatAsState)
+// =============================================
+// Cuando la pestaña está seleccionada, el ícono crece a 125 %
+// con un pequeño rebote (spring). Al dejar de estar seleccionado
+// vuelve a su tamaño normal. Ayuda a los niños a ver dónde están.
+@Composable
+private fun IconoPestana(
+    icono: ImageVector,
+    descripcion: String,
+    seleccionado: Boolean
+) {
+    val escala by animateFloatAsState(
+        targetValue = if (seleccionado) 1.25f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "escalaIcono"
+    )
+
+    Icon(
+        imageVector = icono,
+        contentDescription = descripcion,
+        modifier = Modifier.scale(escala)
+    )
 }

@@ -4,9 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+// NUEVO: AnimatedContent anima el cambio entre login y panel.
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
+// NUEVO: transiciones compartidas de la app.
+import com.example.mpaz_pro_app_movil.components.Transiciones
 import com.example.mpaz_pro_app_movil.screens.LoginScreen
 import com.example.mpaz_pro_app_movil.screens.DocenteScreen
 import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
@@ -42,22 +48,45 @@ fun AplicacionMPAZ() {
         mutableStateOf<UsuarioDemo?>(null)
     }
 
-    // Evitamos utilizar !! gracias a ?.let y a la variable
-    // usuarioSesion, que dentro del bloque NO es nula.
-    val usuarioSesion = usuarioActivo
+    // =============================================
+    // NUEVO: TRANSICIÓN ANIMADA LOGIN <-> PANEL
+    // =============================================
+    // AnimatedContent observa usuarioActivo. Cada vez que cambia
+    // (alguien inicia o cierra sesión), dibuja la pantalla nueva
+    // con una animación mientras la anterior se va.
+    AnimatedContent(
+        targetState = usuarioActivo,
+        modifier = Modifier.fillMaxSize(),
 
-    if (usuarioSesion == null) {
+        // contentKey reemplaza al antiguo key(usuarioSesion.usuario):
+        // si cambia el nombre de usuario se considera otra pantalla
+        // y su estado visual parte desde cero.
+        contentKey = { usuario -> usuario?.usuario },
 
-        // Sin sesión: solo se muestra el formulario.
-        LoginScreen(onIngresar = { usuarioValidado ->
-            usuarioActivo = usuarioValidado
-        })
+        // targetState = hacia dónde vamos.
+        // Si hay usuario, estamos entrando; si es null, saliendo.
+        transitionSpec = {
+            if (targetState != null) {
+                Transiciones.entrarSesion()
+            } else {
+                Transiciones.salirSesion()
+            }
+        },
+        label = "transicionSesion"
+    ) { usuarioSesion ->
+        // usuarioSesion es el valor que corresponde a ESTA pantalla.
+        // Dentro del bloque else Kotlin sabe que NO es nulo,
+        // así que seguimos sin usar !!.
 
-    } else {
+        if (usuarioSesion == null) {
 
-        // key reinicia el estado visual de cada pantalla
-        // si cambia el usuario de una sesión a otra.
-        key(usuarioSesion.usuario) {
+            // Sin sesión: solo se muestra el formulario.
+            LoginScreen(onIngresar = { usuarioValidado ->
+                usuarioActivo = usuarioValidado
+            })
+
+        } else {
+
             when (usuarioSesion.rol) {
 
                 // ALUMNO: conserva la pantalla original
