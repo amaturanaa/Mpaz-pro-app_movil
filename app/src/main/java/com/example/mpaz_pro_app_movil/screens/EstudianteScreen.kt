@@ -67,6 +67,8 @@ import com.example.mpaz_pro_app_movil.pruebas.PruebaLenguaje
 import com.example.mpaz_pro_app_movil.pruebas.PruebaMatematicas
 import com.example.mpaz_pro_app_movil.pruebas.PruebaCiencias
 import com.example.mpaz_pro_app_movil.pruebas.PruebaHistoria
+// NUEVO (colores): paletas suaves de cada prueba.
+import com.example.mpaz_pro_app_movil.pruebas.utiles.PaletasPrueba
 
 // Esta anotación permite usar algunos componentes de Material 3
 // que todavía pueden estar marcados como experimentales.
@@ -450,6 +452,14 @@ private fun MenuDePruebas(
     pruebas: List<PruebaAlumno>,
     onElegirPrueba: (Int) -> Unit
 ) {
+    // NUEVO (colores): cada tarjeta usa el fondo suave de su asignatura,
+    // en el mismo orden que las pruebas (Lenguaje, Matemática, Ciencias, Historia).
+    val paletas = listOf(
+        PaletasPrueba.lenguaje,
+        PaletasPrueba.matematicas,
+        PaletasPrueba.ciencias,
+        PaletasPrueba.historia
+    )
 
     // Columna desplazable SOLO para el menú de selección.
     Column(
@@ -481,7 +491,7 @@ private fun MenuDePruebas(
                     },
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = AzulClaro
+                    containerColor = paletas.getOrElse(indice) { PaletasPrueba.matematicas }.fondo
                 )
             ) {
                 Row(
