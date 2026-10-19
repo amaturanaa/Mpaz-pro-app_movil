@@ -50,7 +50,7 @@ reemplaza la labor ni la evaluación del docente.
 - Consulta solo las unidades que la UTP ya publicó.
 - Asigna unidades a un curso y define el rango de fechas de disponibilidad.
 - Configura el número máximo de intentos (de 1 a 3), que se aplica a la prueba
-  del estudiante.
+  de esa unidad.
 - Decide si el estudiante puede revisar sus respuestas al terminar la prueba.
 - Decide si se avisa o no al curso. Cuando se avisa, se envía una notificación.
 - Revisa el informe de intentos, notas y promedio, visible solo para este perfil.
@@ -59,14 +59,16 @@ reemplaza la labor ni la evaluación del docente.
 ### Estudiante
 
 - Ingresa a su perfil de prueba.
-- Ve solo las unidades que el docente le asignó. Una unidad publicada por la UTP
-  que todavía no fue asignada no aparece.
+- Ve solo las unidades que el docente le asignó, dentro de cada asignatura. Una
+  unidad publicada por la UTP que todavía no fue asignada no aparece.
 - Lee las explicaciones de cada asignatura y las escucha en voz alta.
-- Rinde la prueba final de cada asignatura dentro de los intentos permitidos.
+- Rinde la prueba de cada unidad asignada, formada por las preguntas que creó la
+  UTP, dentro de los intentos permitidos. Las pruebas aparecen agrupadas por
+  asignatura.
 - Recibe su nota en escala de 1,0 a 7,0. La opción de revisar las respuestas
   aparece solo si el docente la habilitó al asignar la unidad.
 - Realiza una actividad con la cámara en Ciencias Naturales (animales).
-- Ve su avance: mejor nota, promedio e intentos usados en cada asignatura.
+- Ve su avance: mejor nota, promedio e intentos usados en cada prueba.
 - No tiene acceso a informes pedagógicos.
 
 ### Cuentas de prueba
@@ -94,15 +96,14 @@ Son datos ficticios, solo para probar la aplicación.
 - **Gestión de unidades y preguntas** con control de estados de publicación.
 - **Asignación de unidades** con fechas, máximo de intentos y permiso para
   revisar respuestas.
-- **Pruebas finales** con intentos limitados, nota en escala chilena y revisión
-  de respuestas.
+- **Pruebas por unidad** generadas con las preguntas de la UTP, con intentos
+  limitados, nota en escala chilena y revisión de respuestas.
 - **Informe pedagógico** reservado al perfil docente.
 - **Persistencia local con Room**: lo que se crea sobrevive al cerrar la app.
 - **Animaciones**: transición entre el inicio de sesión y cada panel, entre las
   pestañas de los tres perfiles y entre la lista, el detalle y la edición de
   unidades de la UTP. También hay animaciones en los mensajes de error, en los
-  íconos de los formularios, en los íconos de la barra inferior del alumno y en
-  las barras de progreso de la pestaña Avance.
+  íconos de los formularios y en la barra de progreso de la actividad con cámara.
 - **Recursos nativos** del dispositivo (ver más abajo).
 
 ### Reglas que la aplicación hace cumplir
@@ -163,7 +164,7 @@ La primera vez que se abre la aplicación se cargan cuentas, unidades y pregunta
 de prueba. Después, todo lo que se crea o se modifica se guarda de inmediato.
 
 Los intentos usados y las notas de las pruebas del estudiante se guardan en
-`SharedPreferences`, un archivo por asignatura.
+`SharedPreferences`, un archivo por unidad.
 
 ## Seguridad de las contraseñas
 
@@ -203,7 +204,7 @@ app/src/main/java/com/example/mpaz_pro_app_movil/
 │   ├── model/          Modelos que usa la interfaz
 │   └── repositorio/    Repositorio y almacén compartido de listas
 ├── notificaciones/     Aviso al asignar una unidad
-├── pruebas/            Las cuatro pruebas finales del estudiante
+├── pruebas/            Prueba de cada unidad (se arma con las preguntas de la UTP) y su pantalla compartida
 ├── screens/            Pantallas de los tres perfiles
 ├── ui/theme/           Colores y tipografía
 ├── validacion/         Validador central y manejo de fechas
@@ -264,25 +265,22 @@ inalámbrica activada. Cada dispositivo guarda su propia base de datos.
 
 1. Entrar como **UTP**, crear una unidad con una pregunta y pasarla hasta **Publicado**.
 2. Entrar como **Docente**, asignar la unidad a un curso y revisar la notificación.
-3. Entrar como **Alumno**: la unidad asignada aparece con su explicación y el
-   botón para escucharla. Rendir una prueba.
+3. Entrar como **Alumno**: la unidad asignada aparece dentro de su asignatura,
+   con su explicación y el botón para escucharla. Su prueba aparece en la
+   pestaña **Pruebas**. Rendirla y revisar la nota en **Avance**.
 4. Volver como **Docente** y revisar el informe y las observaciones.
 
 ## Limitaciones conocidas
 
 Es un MVP y estas partes quedan para una siguiente versión:
 
-- Las pruebas del estudiante son una por asignatura, con preguntas fijas. Todavía
-  no leen las preguntas que crea la UTP.
-- Como la prueba es una por asignatura, sus intentos y notas se comparten entre
-  todas las unidades de esa asignatura. Al asignar una unidad por primera vez, el
-  conteo de esa asignatura parte de cero.
+- Si el docente asigna la misma unidad a varios cursos, el máximo de intentos y
+  el permiso para revisar respuestas quedan con los valores de la última
+  asignación.
 - Los intentos se guardan por instalación de la aplicación, no por estudiante.
 - Las contraseñas de las cuentas de prueba se cargan al crear la base de datos.
   Aún no existe una pantalla para restablecerlas.
-- Las notificaciones son locales: el aviso aparece en el dispositivo donde el
-  docente asigna la unidad. Enviarlo al teléfono de cada estudiante requeriría
-  un servidor con notificaciones push.
+- Las notificaciones son locales: el aviso aparece en el dispositivo donde el docente asigna la unidad. Enviarlo al teléfono de cada estudiante requeriría un servidor con notificaciones push.
 - No hay conexión con sistemas del colegio ni un servidor: todo funciona sin internet.
 - Las cuentas de inicio de sesión son de demostración.
 
