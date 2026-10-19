@@ -21,9 +21,8 @@ data class InformeUnidad(
     val notas: List<Double>
 )
 
-// =============================================
+
 // VIEWMODEL DEL PERFIL DOCENTE
-// =============================================
 // Igual que en UTP: las pantallas muestran, y aquí viven las reglas.
 // Las acciones devuelven null si salió bien, o el motivo del error.
 class DocenteViewModel(application: Application) : AndroidViewModel(application) {
@@ -90,15 +89,15 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
         val esLaPrimeraAsignacion = AlmacenMpaz.asignaciones.none { it.unidadId == unidadId }
         AlmacenMpaz.asignaciones.add(nueva)
 
-        // La prueba del estudiante consulta este mismo límite.
-        ConfigPruebas.guardarMaxIntentos(getApplication(), unidad.asignatura, maxIntentos)
+        // La prueba de esta unidad consulta este mismo límite.
+        ConfigPruebas.guardarMaxIntentos(getApplication(), unidad.id, maxIntentos)
         ConfigPruebas.guardarPermitirVerRespuestas(
-            getApplication(), unidad.asignatura, permitirVerRespuestas
+            getApplication(), unidad.id, permitirVerRespuestas
         )
 
         // Primera vez que se asigna esta unidad: el conteo parte desde cero.
         if (esLaPrimeraAsignacion) {
-            ConfigPruebas.reiniciarResultados(getApplication(), unidad.asignatura)
+            ConfigPruebas.reiniciarResultados(getApplication(), unidad.id)
         }
 
         return if (AlmacenMpaz.guardarAsignaciones(getApplication())) null else mensajeNoGuardo
@@ -114,9 +113,9 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
                 InformeUnidad(
                     unidad = unidad,
                     asignaciones = lista,
-                    intentosUsados = ConfigPruebas.intentosUsados(aplicacion, unidad.asignatura),
+                    intentosUsados = ConfigPruebas.intentosUsados(aplicacion, unidad.id),
                     maxIntentos = lista.maxOf { it.maxIntentos },
-                    notas = ConfigPruebas.notas(aplicacion, unidad.asignatura)
+                    notas = ConfigPruebas.notas(aplicacion, unidad.id)
                 )
             }
     }

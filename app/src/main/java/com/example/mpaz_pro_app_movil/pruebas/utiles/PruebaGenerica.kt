@@ -207,7 +207,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
     // Se lee una vez cada vez que se abre la prueba. Si el docente
     // nunca lo configuró, ConfigPruebas responde true (sí se permite).
     val puedeVerRespuestas = remember(context) {
-        ConfigPruebas.verRespuestasPermitido(context, config.asignatura)
+        ConfigPruebas.verRespuestasPermitido(context, config.archivo)
     }
 
     // Nunca mostramos intentos restantes negativos.
