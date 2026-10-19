@@ -20,6 +20,13 @@ import com.example.mpaz_pro_app_movil.datos.Calificacion
 import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
 import com.example.mpaz_pro_app_movil.pruebas.utiles.ColoresPrueba
 import com.example.mpaz_pro_app_movil.pruebas.utiles.PaletasPrueba
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 
 // Los datos de una asignatura, ya leídos.
@@ -106,6 +113,18 @@ private fun TarjetaAvance(resumen: ResumenAvance, colores: ColoresPrueba) {
     val fraccion = (resumen.intentosUsados.toFloat() / resumen.maxIntentos).coerceIn(0f, 1f)
     val sinIntentos = resumen.intentosUsados >= resumen.maxIntentos
 
+    // ANIMACIÓN DE LA BARRA DE INTENTOS
+    // La barra parte vacía y, al abrir la pestaña, se llena suavemente
+    // hasta el valor real. LaunchedEffect cambia el objetivo después de
+    // dibujar la primera vez; animateFloatAsState hace el recorrido.
+    var objetivo by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(fraccion) { objetivo = fraccion }
+    val progresoAnimado by animateFloatAsState(
+        targetValue = objetivo,
+        animationSpec = tween(durationMillis = 700),
+        label = "progresoIntentos"
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = colores.fondo)
@@ -140,7 +159,7 @@ private fun TarjetaAvance(resumen: ResumenAvance, colores: ColoresPrueba) {
             }
 
             LinearProgressIndicator(
-                progress = { fraccion },
+                progress = { progresoAnimado },
                 modifier = Modifier.fillMaxWidth(),
                 color = colores.principal,
                 trackColor = colores.barraVacia

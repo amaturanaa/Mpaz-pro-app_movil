@@ -101,7 +101,8 @@ Son datos ficticios, solo para probar la aplicación.
 - **Animaciones**: transición entre el inicio de sesión y cada panel, entre las
   pestañas de los tres perfiles y entre la lista, el detalle y la edición de
   unidades de la UTP. También hay animaciones en los mensajes de error, en los
-  íconos de los formularios y en la barra de progreso de la actividad con cámara.
+  íconos de los formularios, en los íconos de la barra inferior del alumno y en
+  las barras de progreso de la pestaña Avance.
 - **Recursos nativos** del dispositivo (ver más abajo).
 
 ### Reglas que la aplicación hace cumplir
