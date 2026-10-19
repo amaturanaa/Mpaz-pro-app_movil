@@ -2,9 +2,7 @@ package com.example.mpaz_pro_app_movil.datos
 
 import android.content.Context
 
-// =============================================
 // PUENTE CON LAS PRUEBAS DEL ESTUDIANTE
-// =============================================
 // Las pruebas del estudiante (PruebaLenguaje, PruebaMatematicas...) guardan
 // sus intentos y sus notas en un archivo de preferencias por asignatura.
 // Este objeto es el único lugar que conoce esos nombres:
@@ -85,4 +83,14 @@ object ConfigPruebas {
             .orEmpty()
         return texto.split(";").mapNotNull { it.trim().toDoubleOrNull() }
     }
+
+    // Máximo de intentos de esa asignatura
+    fun maxIntentos(context: Context, asignatura: String): Int {
+        val archivo = archivoDe(asignatura) ?: return 3
+        return context.applicationContext
+            .getSharedPreferences(archivo, Context.MODE_PRIVATE)
+            .getInt("max_intentos", 3)
+            .coerceIn(1, 3)
+    }
 }
+
