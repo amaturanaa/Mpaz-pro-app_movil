@@ -1,14 +1,8 @@
 package com.example.mpaz_pro_app_movil.screens
 
-// =============================================
-// IMPORTACIONES PARA EL FORMULARIO DE INGRESO
-// =============================================
-// ===== NUEVO: herramientas de animación =====
-// AnimatedVisibility: muestra u oculta algo con animación.
+
 import androidx.compose.animation.AnimatedVisibility
-// Crossfade: funde un contenido con otro (texto del botón).
 import androidx.compose.animation.Crossfade
-// animateColorAsState: cambia un color poco a poco, no de golpe.
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -38,11 +32,11 @@ import com.example.mpaz_pro_app_movil.auth.AutenticacionDemo
 import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
 
-// =============================================
+
 // PANTALLA DE INICIO DE SESIÓN
-// =============================================
 // onIngresar es una función que recibe al usuario
 // autenticado y se lo comunica a MainActivity.
+
 @Composable
 fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
 
@@ -66,7 +60,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
     val scope = rememberCoroutineScope()
     var comprobando by remember { mutableStateOf(false) }
 
-    // ===== NUEVO: COLORES ANIMADOS (animate*AsState) =====
+    //COLORES ANIMADOS (animate*AsState)
     // La tarjeta cambia de color según el rol elegido, así el niño
     // ve claramente que tocó otra opción. El cambio dura 400 ms.
     val colorTarjeta by animateColorAsState(
@@ -136,9 +130,8 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
         }
     }
 
-    // =============================================
+
     // DISEÑO VISUAL
-    // =============================================
     // verticalScroll permite desplazarse si el teclado
     // ocupa buena parte de la pantalla del celular.
     Column(
@@ -191,13 +184,16 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
 
                 // Se crea una opción por cada rol.
                 // Solo una puede quedar seleccionada.
-                Row(
+                // FlowRow: cada botón toma el ancho de su texto y, si no caben
+                // todos en la fila (letra grande del teléfono), el último
+                // pasa a la línea siguiente. Así el texto nunca se parte.
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     RolUsuario.entries.forEach { rol ->
                         FilterChip(
-                            modifier = Modifier.weight(1f),
                             selected = rolSeleccionado == rol,
                             onClick = {
                                 // Seleccionamos el perfil y borramos
@@ -205,7 +201,14 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                                 rolSeleccionado = rol
                                 mensajeError = null
                             },
-                            label = { Text(rol.nombreVisible) }
+                            label = {
+                                Text(
+                                    text = rol.nombreVisible,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
                         )
                     }
                 }
@@ -262,7 +265,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     }
                 )
 
-                // ===== NUEVO: MENSAJE DE ERROR ANIMADO =====
+                // MENSAJE DE ERROR ANIMADO =====
                 // AnimatedVisibility: el mensaje aparece desplegándose
                 // hacia abajo y se va encogiéndose, en vez de saltar.
                 AnimatedVisibility(
@@ -289,7 +292,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                         containerColor = colorBoton
                     )
                 ) {
-                    // ===== NUEVO: TEXTO DEL BOTÓN CON CROSSFADE =====
+                    // TEXTO DEL BOTÓN CON CROSSFADE =====
                     // Mientras se comprueba la clave, el texto se funde
                     // con un circulito de carga y "Comprobando...".
                     Crossfade(
