@@ -1,27 +1,17 @@
 package com.example.mpaz_pro_app_movil.components
 
-// =============================================
-// IMPORTACIONES PARA LAS ANIMACIONES
-// =============================================
-// ContentTransform: describe cómo ENTRA la pantalla nueva
-// y cómo SALE la pantalla anterior al mismo tiempo.
+
 import androidx.compose.animation.ContentTransform
-// fadeIn / fadeOut: aparecer y desaparecer suavemente.
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-// scaleIn: la pantalla crece un poquito al aparecer.
 import androidx.compose.animation.scaleIn
-// slideIn / slideOut: la pantalla se desliza hacia un lado.
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-// togetherWith une la entrada y la salida en una sola transición.
 import androidx.compose.animation.togetherWith
-// tween: animación que dura una cantidad fija de milisegundos.
 import androidx.compose.animation.core.tween
 
-// =============================================
+
 // TRANSICIONES COMPARTIDAS DE LA APP
-// =============================================
 // Las dejamos en un solo lugar para que TODAS las pantallas
 // se muevan igual (alumno, login, y también UTP y Docente
 // si Ale las quiere reutilizar). Si se quiere cambiar la
