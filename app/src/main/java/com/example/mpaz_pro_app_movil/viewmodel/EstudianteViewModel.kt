@@ -3,14 +3,14 @@ package com.example.mpaz_pro_app_movil.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
+import com.example.mpaz_pro_app_movil.datos.model.Pregunta
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.datos.repositorio.AlmacenMpaz
-// NUEVO (tarea 3): para mostrar la fecha de término como dd/mm/aaaa.
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 
-// =============================================
-// NUEVO (tarea 3): UNA UNIDAD QUE EL DOCENTE ASIGNÓ
-// =============================================
+
+// UNA UNIDAD QUE EL DOCENTE ASIGNÓ
+
 // Junta la unidad con los datos de su asignación, para que la
 // pantalla pueda mostrar "Curso: ..." y "Disponible hasta: ...".
 // unidad     -> la unidad publicada por la UTP
@@ -22,19 +22,19 @@ data class UnidadAsignada(
     val fechaHasta: String
 )
 
-// =============================================
-// MOLDE DE UNA PRUEBA DEL MENÚ DEL ALUMNO
-// =============================================
-// titulo      -> nombre grande de la tarjeta (ej: "Lenguaje")
-// descripcion -> texto pequeño de abajo (ej: "Gerundios · 5 preguntas")
-data class PruebaAlumno(
-    val titulo: String,
-    val descripcion: String
+
+// UNA PRUEBA QUE EL ALUMNO PUEDE RENDIR
+// Cada unidad asignada trae su prueba, formada por las preguntas
+// que la UTP escribió para esa unidad.
+// unidad    -> la unidad a la que pertenece la prueba
+// preguntas -> las preguntas de la prueba final de esa unidad
+data class PruebaUnidad(
+    val unidad: Unidad,
+    val preguntas: List<Pregunta>
 )
 
-// =============================================
+
 // VIEWMODEL DEL PERFIL ALUMNO
-// =============================================
 // Sigue la misma idea que UtpViewModel y DocenteViewModel:
 //   - La PANTALLA (EstudianteScreen) solo dibuja y avisa lo que el niño tocó.
 //   - El VIEWMODEL (este archivo) decide QUÉ datos se muestran.
@@ -52,9 +52,8 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
         AlmacenMpaz.iniciar(application)
     }
 
-    // =============================================
-    // NUEVO (tarea 3): UNIDADES QUE VE EL ALUMNO
-    // =============================================
+
+    // UNIDADES QUE VE EL ALUMNO
     // Decisión A del plan: el alumno solo ve una unidad si cumple DOS reglas:
     //   1. La UTP la dejó en PUBLICADO.
     //   2. El docente la asignó al menos a un curso.
@@ -93,9 +92,8 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }
 
-    // =============================================
+
     // ASIGNATURAS DE 2.º BÁSICO
-    // =============================================
     // Antes esta lista estaba escrita dentro de la pantalla.
     // El orden importa: la pantalla le da un color a cada posición.
     val asignaturas: List<String> = listOf(
@@ -105,15 +103,17 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
         "Historia, Geografía y Ciencias Sociales"
     )
 
-    // =============================================
-    // MENÚ DE LAS CUATRO PRUEBAS
-    // =============================================
-    // El orden también importa: la posición es el número de la prueba.
-    // 0 = Lenguaje, 1 = Matemática, 2 = Ciencias, 3 = Historia.
-    val pruebas: List<PruebaAlumno> = listOf(
-        PruebaAlumno("Lenguaje", "Gerundios · 5 preguntas"),
-        PruebaAlumno("Matemática", "Números y operaciones · 5 preguntas"),
-        PruebaAlumno("Ciencias Naturales", "Seres vivos y naturaleza · 5 preguntas"),
-        PruebaAlumno("Historia", "Chile y su entorno · 5 preguntas")
-    )
+
+    // PRUEBAS QUE VE EL ALUMNO
+    // Una prueba por cada unidad asignada por el docente. Si la UTP
+    // no escribió preguntas para la unidad, no hay prueba que mostrar.
+    // Como unidadesAsignadas y AlmacenMpaz.preguntas son listas observables,
+    // si el docente asigna una unidad la prueba aparece sola.
+    val pruebasAsignadas: List<PruebaUnidad>
+        get() = unidadesAsignadas.mapNotNull { asignada ->
+            val preguntas = AlmacenMpaz.preguntas.filter { pregunta ->
+                pregunta.unidadId == asignada.unidad.id && pregunta.esPruebaFinal
+            }
+            if (preguntas.isEmpty()) null else PruebaUnidad(asignada.unidad, preguntas)
+        }
 }

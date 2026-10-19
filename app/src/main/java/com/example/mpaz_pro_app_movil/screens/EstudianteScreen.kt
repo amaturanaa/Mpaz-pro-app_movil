@@ -25,16 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mpaz_pro_app_movil.viewmodel.EstudianteViewModel
-import com.example.mpaz_pro_app_movil.viewmodel.PruebaAlumno
-import com.example.mpaz_pro_app_movil.viewmodel.UnidadAsignada
+import com.example.mpaz_pro_app_movil.viewmodel.PruebaUnidad
+import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
+import androidx.compose.ui.platform.LocalContext
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.ui.theme.*
-import com.example.mpaz_pro_app_movil.pruebas.PruebaLenguaje
-import com.example.mpaz_pro_app_movil.pruebas.PruebaMatematicas
-import com.example.mpaz_pro_app_movil.pruebas.PruebaCiencias
-import com.example.mpaz_pro_app_movil.pruebas.PruebaHistoria
-import com.example.mpaz_pro_app_movil.pruebas.utiles.PaletasPrueba
+import com.example.mpaz_pro_app_movil.pruebas.PruebaDeUnidad
+import com.example.mpaz_pro_app_movil.pruebas.paletaDeAsignatura
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,8 +47,8 @@ fun EstudianteScreen(
     var pestana by remember { mutableIntStateOf(0) }
 
     // Indica qué prueba se ha elegido dentro de "Pruebas":
-    // -1 = mostrar el MENÚ de las cuatro pruebas.
-    //  0 = Lenguaje, 1 = Matemática, 2 = Ciencias, 3 = Historia.
+    // -1 = mostrar el MENÚ con las pruebas asignadas.
+    // Cualquier otro número es el id de la unidad cuya prueba se está rindiendo.
     var pruebaSeleccionada by remember { mutableIntStateOf(-1) }
 
     // null = no hay ninguna abierta. Si tiene un nombre, se muestra esa unidad.
@@ -93,7 +91,7 @@ fun EstudianteScreen(
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
 
-                // Opción para ir al listado de las cuatro pruebas.
+                // Opción para ir al listado de pruebas asignadas.
                 NavigationDrawerItem(
                     label = { Text("Pruebas") },
                     selected = pestana == 1,
@@ -148,7 +146,7 @@ fun EstudianteScreen(
                             Text(
                                 when (pestanaTitulo) {
                                     0 -> "Mis asignaturas"
-                                    1 -> "Prueba final"
+                                    1 -> "Mis pruebas"
                                     else -> "Mi avance"
                                 }
                             )
@@ -259,8 +257,10 @@ fun EstudianteScreen(
                                 targetState = vista,
                                 modifier = Modifier.fillMaxSize(),
                                 transitionSpec = {
+                                    // Más adentro (lista -> asignatura -> unidad) = avanzar;
+                                    // menos adentro = volver.
                                     Transiciones.lateral(
-                                        haciaAdelante = targetState != VistaAsignaturas.Lista
+                                        haciaAdelante = targetState.nivel() > initialState.nivel()
                                     )
                                 },
                                 label = "vistaAsignaturas"
@@ -274,12 +274,19 @@ fun EstudianteScreen(
                                     )
 
                                     // El alumno tocó una de las 4 asignaturas.
+                                    // Dentro de la asignatura se ven sus unidades asignadas.
+                                    // Al tocar una, se abre encima y, al volver, se regresa
+                                    // a esta misma asignatura.
                                     is VistaAsignaturas.AsignaturaAbierta -> UnidadScreen(
                                         asignatura = vistaActual.nombre,
+                                        unidades = viewModel.unidadesAsignadas.filter { asignada ->
+                                            asignada.unidad.asignatura == vistaActual.nombre
+                                        },
+                                        onAbrirUnidad = { unidad -> unidadAbierta = unidad },
                                         onVolver = { asignaturaAbierta = null }
                                     )
 
-                                    // Lista principal: asignaturas + unidades nuevas.
+                                    // Lista principal: solo las 4 asignaturas.
                                     VistaAsignaturas.Lista -> Column(
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -287,29 +294,27 @@ fun EstudianteScreen(
                                             .padding(16.dp)
                                     ) {
                                         // NUEVO (MVVM): los nombres vienen del ViewModel.
+                                        // Las unidades asignadas ya no van en una lista aparte:
+                                        // cada asignatura avisa cuántas tiene y las muestra
+                                        // al abrirla.
                                         ContenidoAsignaturas(
                                             asignaturas = viewModel.asignaturas,
+                                            cantidadUnidades = { asignatura ->
+                                                viewModel.unidadesAsignadas.count { asignada ->
+                                                    asignada.unidad.asignatura == asignatura
+                                                }
+                                            },
                                             onAbrir = { asignatura -> asignaturaAbierta = asignatura }
-                                        )
-
-                                        // Debajo de las 4 asignaturas mostramos
-                                        // las unidades que la UTP publicó (ej: "Chani").
-                                        // NUEVO (MVVM): la lista ya filtrada viene del ViewModel.
-                                        // NUEVO (tarea 3): ahora solo trae las publicadas
-                                        // que el docente asignó.
-                                        UnidadesPublicadas(
-                                            asignadas = viewModel.unidadesAsignadas,
-                                            onAbrirUnidad = { unidad -> unidadAbierta = unidad }
                                         )
                                     }
                                 }
                             }
                         }
 
-                        // Pestaña 1: primero se muestra un listado.
-                        // Al elegir una asignatura se abre SU prueba.
+                        // Pestaña 1: primero se muestra un listado con las pruebas
+                        // de las unidades asignadas. Al elegir una se abre ESA prueba.
                         1 -> {
-                            // -1 es el menú; 0 a 3 es una prueba.
+                            // -1 es el menú; otro número es el id de una unidad.
                             // Abrir una prueba = avanzar; volver al menú = retroceder.
                             AnimatedContent(
                                 targetState = pruebaSeleccionada,
@@ -320,14 +325,20 @@ fun EstudianteScreen(
                                 label = "vistaPruebas"
                             ) { pruebaActual ->
                                 if (pruebaActual == -1) {
-                                    // NUEVO (MVVM): las 4 pruebas vienen del ViewModel.
+                                    // Las pruebas vienen del ViewModel: una por cada
+                                    // unidad que el docente asignó.
                                     MenuDePruebas(
-                                        pruebas = viewModel.pruebas,
-                                        onElegirPrueba = { numero ->
-                                            pruebaSeleccionada = numero
+                                        pruebas = viewModel.pruebasAsignadas,
+                                        asignaturas = viewModel.asignaturas,
+                                        onElegirPrueba = { unidadId ->
+                                            pruebaSeleccionada = unidadId
                                         }
                                     )
                                 } else {
+                                    val prueba = viewModel.pruebasAsignadas.firstOrNull { elegida ->
+                                        elegida.unidad.id == pruebaActual
+                                    }
+
                                     Column(modifier = Modifier.fillMaxSize()) {
                                         // Este botón vuelve al listado sin borrar
                                         // el historial de notas ni los intentos.
@@ -335,37 +346,23 @@ fun EstudianteScreen(
                                             onClick = { pruebaSeleccionada = -1 },
                                             modifier = Modifier.padding(start = 8.dp)
                                         ) {
-                                            Text("← Volver a las cuatro pruebas")
+                                            Text("← Volver a mis pruebas")
                                         }
 
-                                        // Cada prueba ocupa el espacio restante.
-                                        // Se conserva su propia interfaz y scroll.
+                                        // La prueba ocupa el espacio restante.
+                                        // Conserva su propia interfaz y scroll.
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .weight(1f)
                                         ) {
-                                            when (pruebaActual) {
-
-                                                // Si seleccionamos Lenguaje,
-                                                // mostramos sus cinco preguntas.
-                                                0 -> PruebaLenguaje()
-
-                                                // Si seleccionamos Matemática,
-                                                // mostramos la prueba de Matemática.
-                                                1 -> PruebaMatematicas()
-
-                                                // Si seleccionamos Ciencias Naturales,
-                                                // mostramos la prueba de Ciencias.
-                                                2 -> PruebaCiencias()
-
-                                                // Si seleccionamos Historia,
-                                                // mostramos la prueba de Historia.
-                                                3 -> PruebaHistoria()
-
-                                                // Si ocurre una selección desconocida,
-                                                // mostramos un mensaje.
-                                                else -> Text("Prueba no encontrada")
+                                            if (prueba != null) {
+                                                PruebaDeUnidad(
+                                                    unidad = prueba.unidad,
+                                                    preguntas = prueba.preguntas
+                                                )
+                                            } else {
+                                                Text("Prueba no encontrada")
                                             }
                                         }
                                     }
@@ -374,7 +371,7 @@ fun EstudianteScreen(
                         }
 
                         // Pestaña 2: avance del estudiante (mejor nota, promedio e intentos).
-                        else -> AvanceEstudiante(asignaturas = viewModel.asignaturas)
+                        else -> AvanceEstudiante(pruebas = viewModel.pruebasAsignadas)
                     }
                 }
             }
@@ -382,23 +379,17 @@ fun EstudianteScreen(
     }
 }
 
-// MENÚ DE LAS CUATRO PRUEBAS
-// Recibe una función que indica cuál de las 4 pruebas se eligió.
-// No hace ni corrige preguntas aquí: eso ocurre dentro
-// de PruebaLenguaje, PruebaMatematicas, etc.
+// MENÚ DE PRUEBAS
+// Muestra, agrupadas por asignatura, las pruebas de las unidades que el
+// docente asignó. Recibe una función que indica cuál unidad se eligió.
+// No hace ni corrige preguntas aquí: eso ocurre dentro de PruebaDeUnidad.
 @Composable
 private fun MenuDePruebas(
-    pruebas: List<PruebaAlumno>,
+    pruebas: List<PruebaUnidad>,
+    asignaturas: List<String>,
     onElegirPrueba: (Int) -> Unit
 ) {
-    // cada tarjeta usa el fondo suave de su asignatura,
-    // en el mismo orden que las pruebas (Lenguaje, Matemática, Ciencias, Historia).
-    val paletas = listOf(
-        PaletasPrueba.lenguaje,
-        PaletasPrueba.matematicas,
-        PaletasPrueba.ciencias,
-        PaletasPrueba.historia
-    )
+    val context = LocalContext.current
 
     // Columna desplazable SOLO para el menú de selección.
     Column(
@@ -414,50 +405,70 @@ private fun MenuDePruebas(
         )
 
         Text(
-            text = "Selecciona una asignatura para ver su prueba.",
+            text = "Aquí aparecen las pruebas de las unidades que tu profesor te asignó.",
             style = MaterialTheme.typography.bodyMedium
         )
 
-        // Recorremos las cuatro pruebas para crear sus tarjetas.
-        pruebas.forEachIndexed { indice, datos ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // 0 = Lenguaje; 1 = Matemática;
-                        // 2 = Ciencias; 3 = Historia.
-                        onElegirPrueba(indice)
-                    },
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = paletas.getOrElse(indice) { PaletasPrueba.matematicas }.fondo
+        // Una sección por asignatura, con todas sus pruebas.
+        asignaturas.forEach { asignatura ->
+            val deEstaAsignatura = pruebas.filter { prueba ->
+                prueba.unidad.asignatura == asignatura
+            }
+            val colores = paletaDeAsignatura(asignatura)
+
+            Text(
+                text = asignatura,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            if (deEstaAsignatura.isEmpty()) {
+                Text(
+                    text = "Todavía no hay pruebas asignadas en esta asignatura.",
+                    style = MaterialTheme.typography.bodySmall
                 )
-            ) {
-                Row(
+            }
+
+            deEstaAsignatura.forEach { prueba ->
+                val usados = ConfigPruebas.intentosUsados(context, prueba.unidad.id)
+                val maximo = ConfigPruebas.maxIntentos(context, prueba.unidad.id)
+                val cantidad = prueba.preguntas.size
+
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        // Al tocar la tarjeta, avisamos qué unidad se eligió.
+                        .clickable { onElegirPrueba(prueba.unidad.id) },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = colores.fondo)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Prueba: ${prueba.unidad.titulo}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextoPrincipal
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = (if (cantidad == 1) "1 pregunta" else "$cantidad preguntas") +
+                                        " · Intentos usados: $usados de $maximo",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextoPrincipal
+                            )
+                        }
                         Text(
-                            text = datos.titulo,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextoPrincipal
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = datos.descripcion,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "Abrir →",
+                            style = MaterialTheme.typography.labelLarge,
                             color = TextoPrincipal
                         )
                     }
-                    Text(
-                        text = "Abrir →",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = TextoPrincipal
-                    )
                 }
             }
         }
@@ -472,6 +483,8 @@ private fun MenuDePruebas(
 fun ContenidoAsignaturas(
     // los nombres llegan desde EstudianteViewModel.asignaturas.
     asignaturas: List<String>,
+    // Cuántas unidades asignadas tiene cada asignatura.
+    cantidadUnidades: (String) -> Int,
     onAbrir: (String) -> Unit
 ) {
 
@@ -497,89 +510,22 @@ fun ContenidoAsignaturas(
             ),
             shape = RoundedCornerShape(18.dp)
         ) {
-            Text(
-                text = asignatura,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextoPrincipal,
-                modifier = Modifier.padding(20.dp)
-            )
-        }
-    }
-}
-
-
-
-// NUEVO: LISTA DE UNIDADES PUBLICADAS POR LA UTP
-// asignadas     -> la lista YA filtrada por EstudianteViewModel
-//                  (publicadas por la UTP Y asignadas por el docente)
-// onAbrirUnidad -> se ejecuta cuando el alumno toca una unidad
-// NUEVO (MVVM): antes esta función leía AlmacenMpaz y filtraba
-// por su cuenta. Ahora solo dibuja lo que le entregan.
-@Composable
-fun UnidadesPublicadas(
-    asignadas: List<UnidadAsignada>,
-    onAbrirUnidad: (Unidad) -> Unit
-) {
-
-    // Título de la sección.
-    Text(
-        text = "Unidades nuevas",
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
-    )
-
-    // NUEVO (tarea 3): si no hay ninguna asignada, avisamos con un
-    // mensaje que explica que falta el paso del profesor.
-    if (asignadas.isEmpty()) {
-        Text(
-            text = "Tu profesor todavía no te ha asignado unidades.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-
-    // Creamos una tarjeta por cada unidad asignada.
-    // "(unidad, cursos, fechaHasta)" saca los tres datos de UnidadAsignada.
-    asignadas.forEach { (unidad, cursos, fechaHasta) ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp)
-                // Al tocar la tarjeta, avisamos qué unidad se eligió.
-                .clickable { onAbrirUnidad(unidad) },
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = AzulClaro)
-        ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                // Asignatura en letra pequeña (ej: "Ciencias Naturales").
+            Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = unidad.asignatura,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextoPrincipal
-                )
-                // Título de la unidad en grande (ej: "Chani").
-                Text(
-                    text = unidad.titulo,
+                    text = asignatura,
                     style = MaterialTheme.typography.titleMedium,
                     color = TextoPrincipal
                 )
-                // Objetivo, para que el alumno sepa de qué trata.
-                Text(
-                    text = unidad.objetivo,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextoPrincipal
-                )
-                // NUEVO (tarea 3): datos de la asignación del docente.
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Curso: ${cursos.joinToString(", ")}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextoPrincipal
-                )
-                Text(
-                    text = "Disponible hasta: $fechaHasta",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextoPrincipal
-                )
+
+                // Aviso pequeño si hay unidades asignadas en esta asignatura.
+                val cantidad = cantidadUnidades(asignatura)
+                if (cantidad > 0) {
+                    Text(
+                        text = if (cantidad == 1) "1 unidad nueva" else "$cantidad unidades nuevas",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = TextoPrincipal
+                    )
+                }
             }
         }
     }
@@ -594,7 +540,7 @@ fun UnidadesPublicadas(
 // solo puede ser una de estas tres opciones.
 private sealed interface VistaAsignaturas {
 
-    // La lista principal con las 4 asignaturas y las unidades nuevas.
+    // La lista principal con las 4 asignaturas.
     data object Lista : VistaAsignaturas
 
     // Una de las 4 asignaturas abierta (ej: "Matemáticas").
@@ -602,6 +548,14 @@ private sealed interface VistaAsignaturas {
 
     // Una unidad publicada por la UTP abierta.
     data class UnidadAbierta(val unidad: Unidad) : VistaAsignaturas
+}
+
+// Qué tan adentro está cada vista. Sirve para saber si la animación
+// debe avanzar (entrar más adentro) o retroceder (volver).
+private fun VistaAsignaturas.nivel(): Int = when (this) {
+    VistaAsignaturas.Lista -> 0
+    is VistaAsignaturas.AsignaturaAbierta -> 1
+    is VistaAsignaturas.UnidadAbierta -> 2
 }
 
 

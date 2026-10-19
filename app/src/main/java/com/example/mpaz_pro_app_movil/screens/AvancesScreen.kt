@@ -1,8 +1,9 @@
 package com.example.mpaz_pro_app_movil.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,39 +15,44 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import com.example.mpaz_pro_app_movil.datos.Calificacion
-import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
-import com.example.mpaz_pro_app_movil.pruebas.utiles.ColoresPrueba
-import com.example.mpaz_pro_app_movil.pruebas.utiles.PaletasPrueba
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.example.mpaz_pro_app_movil.datos.Calificacion
+import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
+import com.example.mpaz_pro_app_movil.pruebas.paletaDeAsignatura
+import com.example.mpaz_pro_app_movil.pruebas.utiles.ColoresPrueba
+import com.example.mpaz_pro_app_movil.viewmodel.PruebaUnidad
 
 
-// Los datos de una asignatura, ya leídos.
+// Los datos de la prueba de una unidad, ya leídos.
 private data class ResumenAvance(
+    val titulo: String,
     val asignatura: String,
     val notas: List<Double>,
     val intentosUsados: Int,
-    val maxIntentos: Int
+    val maxIntentos: Int,
+    val colores: ColoresPrueba
 )
 
+// Avance del estudiante: una tarjeta por cada prueba asignada.
 @Composable
-fun AvanceEstudiante(asignaturas: List<String>) {
+fun AvanceEstudiante(pruebas: List<PruebaUnidad>) {
     val context = LocalContext.current
 
-    val resumenes = asignaturas.map { asignatura ->
+    val resumenes = pruebas.map { prueba ->
         ResumenAvance(
-            asignatura = asignatura,
-            notas = ConfigPruebas.notas(context, asignatura),
-            intentosUsados = ConfigPruebas.intentosUsados(context, asignatura),
-            maxIntentos = ConfigPruebas.maxIntentos(context, asignatura)
+            titulo = prueba.unidad.titulo,
+            asignatura = prueba.unidad.asignatura,
+            notas = ConfigPruebas.notas(context, prueba.unidad.id),
+            intentosUsados = ConfigPruebas.intentosUsados(context, prueba.unidad.id),
+            maxIntentos = ConfigPruebas.maxIntentos(context, prueba.unidad.id),
+            colores = paletaDeAsignatura(prueba.unidad.asignatura)
         )
     }
 
@@ -85,29 +91,30 @@ fun AvanceEstudiante(asignaturas: List<String>) {
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "Pruebas rendidas: $pruebasRendidas de ${asignaturas.size}",
+                    text = "Pruebas rendidas: $pruebasRendidas de ${resumenes.size}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
 
-        // Una tarjeta por asignatura, con el color de su prueba.
-        // El orden coincide con la lista del ViewModel:
-        // 0 Lenguaje, 1 Matemáticas, 2 Ciencias, 3 Historia.
-        resumenes.forEachIndexed { posicion, resumen ->
-            val colores = when (posicion) {
-                0 -> PaletasPrueba.lenguaje
-                1 -> PaletasPrueba.matematicas
-                2 -> PaletasPrueba.ciencias
-                else -> PaletasPrueba.historia
-            }
-            TarjetaAvance(resumen, colores)
+        // Si el docente todavía no asigna nada, lo explicamos.
+        if (resumenes.isEmpty()) {
+            Text(
+                text = "Cuando tu profesor te asigne una unidad, aquí verás tu avance.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        // Una tarjeta por prueba, con el color de su asignatura.
+        resumenes.forEach { resumen ->
+            TarjetaAvance(resumen)
         }
     }
 }
 
 @Composable
-private fun TarjetaAvance(resumen: ResumenAvance, colores: ColoresPrueba) {
+private fun TarjetaAvance(resumen: ResumenAvance) {
+    val colores = resumen.colores
     val mejorNota = resumen.notas.maxOrNull()
     val promedio = Calificacion.promedio(resumen.notas)
     val fraccion = (resumen.intentosUsados.toFloat() / resumen.maxIntentos).coerceIn(0f, 1f)
@@ -135,6 +142,11 @@ private fun TarjetaAvance(resumen: ResumenAvance, colores: ColoresPrueba) {
         ) {
             Text(
                 text = resumen.asignatura,
+                style = MaterialTheme.typography.labelMedium,
+                color = colores.secundario
+            )
+            Text(
+                text = resumen.titulo,
                 style = MaterialTheme.typography.titleMedium,
                 color = colores.oscuro
             )

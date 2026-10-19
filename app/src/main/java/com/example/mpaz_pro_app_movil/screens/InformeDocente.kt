@@ -83,9 +83,7 @@ fun InformeDocente(
     }
 
     Text(
-        text = "Los resultados vienen de la prueba de cada asignatura, así que se " +
-                "comparten entre todas las unidades de esa asignatura. " +
-                "Corresponden al dispositivo del estudiante de prueba.",
+        text = "Los resultados son los de la prueba de cada unidad. Corresponden al dispositivo del estudiante de prueba.",
         style = MaterialTheme.typography.bodySmall,
         color = TextoSecundario
     )
@@ -169,7 +167,7 @@ private fun TarjetaInforme(informe: InformeUnidad) {
                 color = TextoSecundario
             )
             Text(
-                text = "Intentos usados en la prueba de ${informe.unidad.asignatura}: " +
+                text = "Intentos usados en esta prueba: " +
                         "${informe.intentosUsados} de ${informe.maxIntentos}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextoPrincipal
