@@ -1,83 +1,46 @@
 package com.example.mpaz_pro_app_movil.screens
 
-// =============================================
-// IMPORTACIONES: HERRAMIENTAS PARA LA INTERFAZ
-// =============================================
-
-// ===== NUEVO: herramientas de animación =====
-// AnimatedContent: anima el cambio de una pantalla a otra.
 import androidx.compose.animation.AnimatedContent
-// Crossfade: funde el título de la barra superior.
 import androidx.compose.animation.Crossfade
-// animateFloatAsState + spring: el ícono de la pestaña elegida
-// crece con un pequeño "rebote".
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
-// Las transiciones compartidas (avanzar / retroceder).
 import com.example.mpaz_pro_app_movil.components.Transiciones
-
-// Nos permiten organizar elementos, crear espacios
-// y hacer que el menú de pruebas tenga desplazamiento.
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-// Iconos de los botones de navegación.
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
-
-// Text, Card, Scaffold, NavigationBar y demás elementos Material 3.
 import androidx.compose.material3.*
-
-// remember y mutableIntStateOf permiten guardar el estado de la pantalla.
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-// ===== NUEVO (MVVM): la pantalla ya NO lee la base de datos =====
-// Antes aquí se importaban LocalContext, AlmacenMpaz y EstadoUnidad
-// para cargar y filtrar las unidades. Ahora eso lo hace el ViewModel.
-// viewModel(): crea el ViewModel la primera vez y luego reutiliza el mismo.
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mpaz_pro_app_movil.viewmodel.EstudianteViewModel
 import com.example.mpaz_pro_app_movil.viewmodel.PruebaAlumno
-// NUEVO (tarea 3): unidad + datos de su asignación.
 import com.example.mpaz_pro_app_movil.viewmodel.UnidadAsignada
-// Unidad: el "molde" de una unidad (título, objetivo, explicación...).
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
-
-// Se utiliza para abrir y cerrar el menú lateral.
 import kotlinx.coroutines.launch
-
-// Colores existentes en el proyecto MPAZ PRO.
 import com.example.mpaz_pro_app_movil.ui.theme.*
-
-// IMPORTANTE: importamos las CUATRO funciones de prueba.
-// Cada una ya tiene sus propias preguntas, notas e intentos.
 import com.example.mpaz_pro_app_movil.pruebas.PruebaLenguaje
 import com.example.mpaz_pro_app_movil.pruebas.PruebaMatematicas
 import com.example.mpaz_pro_app_movil.pruebas.PruebaCiencias
 import com.example.mpaz_pro_app_movil.pruebas.PruebaHistoria
-// NUEVO (colores): paletas suaves de cada prueba.
 import com.example.mpaz_pro_app_movil.pruebas.utiles.PaletasPrueba
 
-// Esta anotación permite usar algunos componentes de Material 3
-// que todavía pueden estar marcados como experimentales.
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EstudianteScreen(
     onCerrarSesion: () -> Unit,
-    // NUEVO (MVVM): la pantalla recibe su ViewModel.
-    // MainActivity no cambia: si no se entrega uno, viewModel() lo crea solo.
     viewModel: EstudianteViewModel = viewModel()
 ) {
 
@@ -93,17 +56,11 @@ fun EstudianteScreen(
     // null = no hay ninguna abierta. Si tiene un nombre, se muestra esa unidad.
     var asignaturaAbierta by remember { mutableStateOf<String?>(null) }
 
-    // ===== NUEVO =====
+
     // Guarda la unidad publicada que el alumno tocó.
     // null = no hay ninguna abierta.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
-    // NUEVO (MVVM): aquí antes se cargaba la base de datos con
-    // AlmacenMpaz.iniciar(contexto). Ahora lo hace el init
-    // de EstudianteViewModel, igual que en UTP y Docente.
-    //
-    // Las variables de arriba (pestana, pruebaSeleccionada, etc.) se quedan
-    // en la pantalla porque solo dicen QUÉ SE VE, no son datos de la app.
 
     // Controla si el menú lateral está abierto o cerrado.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -111,9 +68,8 @@ fun EstudianteScreen(
     // Permite ejecutar la apertura/cierre del menú lateral.
     val scope = rememberCoroutineScope()
 
-    // =============================================
-    // MENÚ LATERAL (EL QUE SE ABRE CON LAS TRES RAYAS)
-    // =============================================
+
+    // MENÚ LATERAL
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -178,9 +134,8 @@ fun EstudianteScreen(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
 
-            // =============================================
+
             // BARRA SUPERIOR
-            // =============================================
             topBar = {
                 TopAppBar(
                     title = {
@@ -213,9 +168,7 @@ fun EstudianteScreen(
                 )
             },
 
-            // =============================================
             // BARRA INFERIOR: 3 PESTAÑAS
-            // =============================================
             bottomBar = {
                 NavigationBar {
                     NavigationBarItem(
@@ -268,9 +221,7 @@ fun EstudianteScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // =============================================
-                // NUEVO: CAMBIO ANIMADO ENTRE PESTAÑAS
-                // =============================================
+                //CAMBIO ANIMADO ENTRE PESTAÑAS
                 // AnimatedContent compara la pestaña anterior (initialState)
                 // con la nueva (targetState):
                 //   - si la nueva está a la DERECHA (número mayor) -> avanzar
@@ -284,9 +235,6 @@ fun EstudianteScreen(
                     },
                     label = "pestanasAlumno"
                 ) { pestanaActual ->
-                    // IMPORTANTE: aquí adentro usamos pestanaActual y NO pestana,
-                    // porque durante la animación se dibujan DOS pestañas a la vez
-                    // (la que sale y la que entra).
                     when (pestanaActual) {
                         // Pestaña 0: conservamos la pantalla de asignaturas.
                         0 -> {
@@ -295,7 +243,7 @@ fun EstudianteScreen(
                             val unidadSeleccionada = unidadAbierta
                             val asignaturaSeleccionada = asignaturaAbierta
 
-                            // NUEVO: resumimos en UN solo valor qué se está viendo.
+                            // resumimos en UN solo valor qué se está viendo.
                             val vista = when {
                                 unidadSeleccionada != null ->
                                     VistaAsignaturas.UnidadAbierta(unidadSeleccionada)
@@ -304,7 +252,7 @@ fun EstudianteScreen(
                                 else -> VistaAsignaturas.Lista
                             }
 
-                            // NUEVO: animamos el paso lista -> detalle -> lista.
+                            // animamos el paso lista -> detalle -> lista.
                             // Si vamos hacia la Lista es "volver" (retroceder);
                             // si abrimos algo es "entrar" (avanzar).
                             AnimatedContent(
@@ -361,7 +309,7 @@ fun EstudianteScreen(
                         // Pestaña 1: primero se muestra un listado.
                         // Al elegir una asignatura se abre SU prueba.
                         1 -> {
-                            // NUEVO: -1 es el menú; 0 a 3 es una prueba.
+                            // -1 es el menú; 0 a 3 es una prueba.
                             // Abrir una prueba = avanzar; volver al menú = retroceder.
                             AnimatedContent(
                                 targetState = pruebaSeleccionada,
@@ -425,12 +373,8 @@ fun EstudianteScreen(
                             }
                         }
 
-                        // Pestaña 2: dejamos intacto el espacio para avance.
-                        else -> Text(
-                            text = "Aquí va el avance del estudiante",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        // Pestaña 2: avance del estudiante (mejor nota, promedio e intentos).
+                        else -> AvanceEstudiante(asignaturas = viewModel.asignaturas)
                     }
                 }
             }
@@ -438,21 +382,16 @@ fun EstudianteScreen(
     }
 }
 
-// =============================================
 // MENÚ DE LAS CUATRO PRUEBAS
-// =============================================
-
 // Recibe una función que indica cuál de las 4 pruebas se eligió.
 // No hace ni corrige preguntas aquí: eso ocurre dentro
 // de PruebaLenguaje, PruebaMatematicas, etc.
 @Composable
 private fun MenuDePruebas(
-    // NUEVO (MVVM): antes la lista estaba escrita aquí;
-    // ahora llega desde EstudianteViewModel.pruebas.
     pruebas: List<PruebaAlumno>,
     onElegirPrueba: (Int) -> Unit
 ) {
-    // NUEVO (colores): cada tarjeta usa el fondo suave de su asignatura,
+    // cada tarjeta usa el fondo suave de su asignatura,
     // en el mismo orden que las pruebas (Lenguaje, Matemática, Ciencias, Historia).
     val paletas = listOf(
         PaletasPrueba.lenguaje,
@@ -525,21 +464,19 @@ private fun MenuDePruebas(
     }
 }
 
-// =============================================
-// PESTAÑA ORIGINAL DE ASIGNATURAS
-// =============================================
 
+// PESTAÑA ORIGINAL DE ASIGNATURAS
 // Conservamos la función para no modificar
 // tu diseño actual de las asignaturas.
 @Composable
 fun ContenidoAsignaturas(
-    // NUEVO (MVVM): los nombres llegan desde EstudianteViewModel.asignaturas.
+    // los nombres llegan desde EstudianteViewModel.asignaturas.
     asignaturas: List<String>,
     onAbrir: (String) -> Unit
 ) {
 
-    // Los colores SÍ se quedan aquí: son parte del diseño, no datos.
-    // Colores originales definidos en ui.theme.
+
+
     val colores = listOf(
         RosadoClaro,
         AzulClaro,
@@ -571,9 +508,8 @@ fun ContenidoAsignaturas(
 }
 
 
-// =============================================
+
 // NUEVO: LISTA DE UNIDADES PUBLICADAS POR LA UTP
-// =============================================
 // asignadas     -> la lista YA filtrada por EstudianteViewModel
 //                  (publicadas por la UTP Y asignadas por el docente)
 // onAbrirUnidad -> se ejecuta cuando el alumno toca una unidad
@@ -650,9 +586,8 @@ fun UnidadesPublicadas(
 }
 
 
-// =============================================
-// NUEVO: QUÉ SE VE EN LA PESTAÑA ASIGNATURAS
-// =============================================
+
+//QUÉ SE VE EN LA PESTAÑA ASIGNATURAS
 // Antes se usaban tres if/else (unidad, asignatura o lista).
 // Para animar el cambio, AnimatedContent necesita UN solo valor
 // que diga qué pantalla mostrar. Esta clase sellada es ese valor:
@@ -670,9 +605,8 @@ private sealed interface VistaAsignaturas {
 }
 
 
-// =============================================
-// NUEVO: ÍCONO DE PESTAÑA ANIMADO (animateFloatAsState)
-// =============================================
+
+//ÍCONO DE PESTAÑA ANIMADO (animateFloatAsState)
 // Cuando la pestaña está seleccionada, el ícono crece a 125 %
 // con un pequeño rebote (spring). Al dejar de estar seleccionado
 // vuelve a su tamaño normal. Ayuda a los niños a ver dónde están.

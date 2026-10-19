@@ -1,8 +1,6 @@
 package com.example.mpaz_pro_app_movil.pruebas.utiles
 
-// ============================================================
-// IMPORTACIONES: herramientas de Android y Jetpack Compose.
-// ============================================================
+
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -19,21 +17,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-// NUEVO (tarea 4): para saber si el docente permite revisar respuestas.
 import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
 import java.util.Locale
 import kotlin.math.roundToInt
 
-// ============================================================
-// NUEVO (tarea 5): PRUEBA COMPARTIDA POR LAS CUATRO ASIGNATURAS
-// ============================================================
-// Antes, PruebaLenguaje, PruebaMatematicas, PruebaCiencias y PruebaHistoria
-// tenían cada una ~570 líneas CASI IGUALES: solo cambiaban las preguntas,
-// los títulos y el archivo donde se guardan las notas.
-// Ahora toda la lógica (intentos, nota chilena, pantallas, revisión)
-// vive UNA sola vez aquí, y cada prueba solo entrega sus datos.
-// Si hay que arreglar algo de las pruebas, se arregla en este archivo
-// y queda arreglado en las cuatro.
+
+// PRUEBA COMPARTIDA POR LAS CUATRO ASIGNATURAS
 
 // MODELO: estructura común para las preguntas de cualquier prueba.
 // 'correcta' es el índice de la alternativa buena:
@@ -46,22 +35,10 @@ data class PreguntaPrueba(
     val explicacion: String
 )
 
-// LO QUE CAMBIA DE UNA PRUEBA A OTRA.
-// titulo          -> "Prueba de Matemática"
-// subtitulo       -> texto pequeño bajo el título
-// asignatura      -> nombre completo, para preguntarle a ConfigPruebas
-//                    si el docente permite revisar respuestas
-// archivo         -> archivo de SharedPreferences donde se guardan
-//                    intentos y notas (debe coincidir con ConfigPruebas.archivoDe)
-// preguntas       -> el banco de preguntas
-// colores         -> paleta suave de la asignatura (ver PaletasPrueba)
-// archivoAntiguo  -> solo Lenguaje: archivo de una versión vieja de la app
-//                    del que se copian intentos y notas (null = no hay)
-// =============================================
-// NUEVO (colores): PALETA DE COLORES DE UNA PRUEBA
-// =============================================
+
+// PALETA DE COLORES DE UNA PRUEBA
 // Cada prueba usa una versión SUAVE del color de su asignatura
-// (los mismos de las tarjetas de "Mis asignaturas"):
+// los mismos de las tarjetas de "Mis asignaturas":
 // Lenguaje = rosado, Matemáticas = azul, Ciencias = verde, Historia = amarillo.
 // fondo      -> tarjetas grandes (inicio, pregunta, resultado)
 // principal  -> botones, barra de progreso, nota y alternativa elegida
@@ -80,7 +57,7 @@ data class ColoresPrueba(
     val barraVacia: Color
 )
 
-// Las cuatro paletas, en un solo lugar para cambiarlas fácil.
+
 // Los colores "principal" son lo bastante oscuros para que el texto
 // blanco de los botones se lea bien.
 object PaletasPrueba {
@@ -93,7 +70,6 @@ object PaletasPrueba {
         divisor = Color(0xFFF6C9D7),
         barraVacia = Color(0xFFF3D3DE)
     )
-    // Matemáticas conserva el azul que ya tenían todas las pruebas.
     val matematicas = ColoresPrueba(
         fondo = Color(0xFFEDF5FF),
         principal = Color(0xFF3169C6),
@@ -134,9 +110,8 @@ data class ConfiguracionPrueba(
     val colores: ColoresPrueba = PaletasPrueba.matematicas
 )
 
-// ============================================================
+
 // PANTALLA COMPARTIDA DE LAS PRUEBAS
-// ============================================================
 // Recibe la configuración de UNA prueba y dibuja sus tres pantallas:
 // inicio con historial, preguntas y resultado.
 @Composable
@@ -260,10 +235,8 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
         Locale.forLanguageTag("es-CL"), "%.1f", valor
     )
 
-    // NUEVO (colores): la paleta ahora llega desde cada prueba.
+    // la paleta ahora llega desde cada prueba.
     // Se dejaron los mismos nombres de antes (azul, azulPastel...)
-    // para no cambiar el resto del archivo: ahora "azul" significa
-    // "el color principal de ESTA asignatura".
     val azulOscuro = config.colores.oscuro
     val azul = config.colores.principal
     val azulPastel = config.colores.fondo
@@ -282,9 +255,8 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
     ) {
         when (pantalla) {
 
-            // ====================================================
+
             // PANTALLA 0: TARJETA DE INICIO E HISTORIAL DE NOTAS.
-            // ====================================================
             0 -> {
                 // Leemos nuevamente el valor si el profesor lo cambió
                 // antes de entrar a esta pantalla de prueba.
@@ -426,9 +398,8 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 }
             }
 
-            // ====================================================
+
             // PANTALLA 1: PREGUNTAS Y ALTERNATIVAS.
-            // ====================================================
             1 -> {
                 Text(
                     text = config.titulo,
@@ -591,9 +562,8 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 }
             }
 
-            // ====================================================
+
             // PANTALLA 2: NOTA, PUNTAJE Y REVISIÓN DE RESPUESTAS.
-            // ====================================================
             2 -> {
                 Text(
                     text = "¡Prueba terminada!",
@@ -633,7 +603,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     }
                 }
 
-                // NUEVO (tarea 4): el botón solo aparece si el docente lo permite.
+                // el botón solo aparece si el docente lo permite.
                 // Si no, mostramos un aviso para que el niño sepa por qué no está.
                 if (puedeVerRespuestas) {
                     // Revisión con retroalimentación educativa, opcional.
@@ -651,7 +621,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     )
                 }
 
-                // NUEVO (tarea 4): doble seguro, la revisión tampoco se dibuja
+                // doble seguro, la revisión tampoco se dibuja
                 // si no está permitida.
                 if (mostrarRevision && puedeVerRespuestas) {
                     preguntas.forEachIndexed { indice, pregunta ->
