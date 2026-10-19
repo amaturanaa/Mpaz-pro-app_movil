@@ -30,6 +30,8 @@ import com.example.mpaz_pro_app_movil.notificaciones.Notificador
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 import com.example.mpaz_pro_app_movil.viewmodel.DocenteViewModel
+import androidx.compose.animation.AnimatedContent
+import com.example.mpaz_pro_app_movil.components.Transiciones
 
 // Datos de una asignación recién creada, guardados mientras se espera
 // la respuesta de la persona al permiso de notificaciones.
@@ -46,6 +48,7 @@ private data class AvisoAsignacion(
 //   0 = Unidades (las que la UTP publicó)
 //   1 = Asignar una unidad a un curso
 //   2 = Informes de lo que hicieron los estudiantes
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocenteScreen(
@@ -169,71 +172,90 @@ fun DocenteScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                when (pestana) {
-                    0 -> UnidadesDocente(
-                        unidades = viewModel.unidadesPublicadas,
-                        asignacionesDe = { unidadId -> viewModel.asignacionesDe(unidadId) }
-                    )
-
-                    1 -> FormularioAsignacion(
-                        unidades = viewModel.unidadesPublicadas,
-                        cursos = ConfigPruebas.cursos,
-                        onAsignar = { unidad, curso, inicio, fin, intentos, notificar, verRespuestas ->
-                            val error = viewModel.asignar(
-                                unidadId = unidad.id,
-                                curso = curso,
-                                inicioVisible = inicio,
-                                finVisible = fin,
-                                maxIntentos = intentos,
-                                notificarCurso = notificar,
-                                permitirVerRespuestas = verRespuestas
+                // =============================================
+                // ANIMACIÓN ENTRE PESTAÑAS
+                // =============================================
+                // Las pestañas van de izquierda a derecha (0, 1, 2):
+                // si vas a una con número mayor, la pantalla entra desde la
+                // derecha; si vas a una menor, entra desde la izquierda.
+                // Usa las mismas transiciones que el alumno y la UTP.
+                AnimatedContent(
+                    targetState = pestana,
+                    transitionSpec = {
+                        Transiciones.lateral(haciaAdelante = targetState > initialState)
+                    },
+                    label = "pestanaDocente"
+                ) { pestanaActual ->
+                    // Este Column es necesario: AnimatedContent apila lo que
+                    // haya adentro, y cada pestaña dibuja varios elementos.
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        when (pestanaActual) {
+                            0 -> UnidadesDocente(
+                                unidades = viewModel.unidadesPublicadas,
+                                asignacionesDe = { unidadId -> viewModel.asignacionesDe(unidadId) }
                             )
 
-                            if (error == null) {
-                                pestana = 0
+                            1 -> FormularioAsignacion(
+                                unidades = viewModel.unidadesPublicadas,
+                                cursos = ConfigPruebas.cursos,
+                                onAsignar = { unidad, curso, inicio, fin, intentos, notificar, verRespuestas ->
+                                    val error = viewModel.asignar(
+                                        unidadId = unidad.id,
+                                        curso = curso,
+                                        inicioVisible = inicio,
+                                        finVisible = fin,
+                                        maxIntentos = intentos,
+                                        notificarCurso = notificar,
+                                        permitirVerRespuestas = verRespuestas
+                                    )
 
-                                if (!notificar) {
-                                    // El docente eligió no avisar al curso.
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            "Unidad asignada. No se envió aviso."
-                                        )
-                                    }
-                                } else {
-                                    val aviso = AvisoAsignacion(unidad.titulo, curso, fin)
+                                    if (error == null) {
+                                        pestana = 0
 
-                                    if (Notificador.necesitaPedirPermiso(context)) {
-                                        // Android 13 o más: primero se pide el permiso.
-                                        avisoPendiente = aviso
-                                        lanzadorPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                    } else {
-                                        val mostrado = Notificador.avisarAsignacion(
-                                            context, aviso.titulo, aviso.curso, aviso.fin
-                                        )
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                if (mostrado) "Unidad asignada. Aviso enviado."
-                                                else "Unidad asignada. Los avisos están desactivados."
-                                            )
+                                        if (!notificar) {
+                                            // El docente eligió no avisar al curso.
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    "Unidad asignada. No se envió aviso."
+                                                )
+                                            }
+                                        } else {
+                                            val aviso = AvisoAsignacion(unidad.titulo, curso, fin)
+
+                                            if (Notificador.necesitaPedirPermiso(context)) {
+                                                // Android 13 o más: primero se pide el permiso.
+                                                avisoPendiente = aviso
+                                                lanzadorPermiso.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                            } else {
+                                                val mostrado = Notificador.avisarAsignacion(
+                                                    context, aviso.titulo, aviso.curso, aviso.fin
+                                                )
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        if (mostrado) "Unidad asignada. Aviso enviado."
+                                                        else "Unidad asignada. Los avisos están desactivados."
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
+                                    error
                                 }
-                            }
-                            error
-                        }
-                    )
+                            )
 
-                    else -> InformeDocente(
-                        informes = viewModel.informes(),
-                        observaciones = viewModel.observaciones,
-                        unidadPorId = { id -> viewModel.unidadPorId(id) },
-                        onAgregarObservacion = { estudianteId, unidadId, texto ->
-                            viewModel.agregarObservacion(estudianteId, unidadId, texto)
-                        },
-                        onAvisar = { mensaje ->
-                            scope.launch { snackbarHostState.showSnackbar(mensaje) }
+                            else -> InformeDocente(
+                                informes = viewModel.informes(),
+                                observaciones = viewModel.observaciones,
+                                unidadPorId = { id -> viewModel.unidadPorId(id) },
+                                onAgregarObservacion = { estudianteId, unidadId, texto ->
+                                    viewModel.agregarObservacion(estudianteId, unidadId, texto)
+                                },
+                                onAvisar = { mensaje ->
+                                    scope.launch { snackbarHostState.showSnackbar(mensaje) }
+                                }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }

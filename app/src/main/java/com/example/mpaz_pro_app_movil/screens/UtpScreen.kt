@@ -29,6 +29,31 @@ import com.example.mpaz_pro_app_movil.components.MensajeError
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.viewmodel.UtpViewModel
+import androidx.compose.animation.AnimatedContent
+import com.example.mpaz_pro_app_movil.components.Transiciones
+
+
+// =============================================
+// LAS TRES VISTAS DE LA UTP
+// =============================================
+// AnimatedContent necesita UN solo valor para comparar y saber
+// cuándo cambió la pantalla. Este valor dice cuál se está mostrando:
+//   Lista    -> menú lateral + pestañas (la vista normal)
+//   Detalle  -> revisión de una unidad y sus preguntas
+//   Editando -> formulario para editar una unidad
+private sealed interface VistaUtp {
+    data object Lista : VistaUtp
+    data class Detalle(val id: Int) : VistaUtp
+    data class Editando(val id: Int) : VistaUtp
+}
+
+// Qué tan "adentro" estamos. Sirve para elegir la dirección de la animación:
+// de la lista hacia una unidad = avanzar; de vuelta a la lista = retroceder.
+private fun VistaUtp.nivel(): Int = when (this) {
+    VistaUtp.Lista -> 0
+    is VistaUtp.Detalle -> 1
+    is VistaUtp.Editando -> 1
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,159 +80,206 @@ fun UtpScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    if (unidadEditando != null) {
+    // Qué vista corresponde mostrar ahora. Editar tiene prioridad sobre revisar.
+    val vista: VistaUtp = when {
+        unidadEditando != null -> VistaUtp.Editando(unidadEditando.id)
+        unidadAbierta != null -> VistaUtp.Detalle(unidadAbierta.id)
+        else -> VistaUtp.Lista
+    }
 
-        // =============================================
-        // EDITAR UNA UNIDAD EXISTENTE
-        // =============================================
-        PantallaEditarUnidad(
-            unidad = unidadEditando,
-            // Los códigos de las OTRAS unidades (la propia no cuenta como repetida).
-            codigosOtros = viewModel.unidades
-                .filter { it.id != unidadEditando.id }
-                .map { it.codigoOA },
-            onGuardar = { unidadModificada ->
-                val error = viewModel.editarUnidad(unidadModificada)
-                if (error == null) {
-                    unidadEditandoId = null
-                    scope.launch { snackbarHostState.showSnackbar("Cambios guardados.") }
-                }
-                error
-            },
-            onVolver = { unidadEditandoId = null }
-        )
+    // =============================================
+    // ANIMACIÓN ENTRE VISTAS
+    // =============================================
+    // Al abrir una unidad la pantalla nueva llega desde la derecha;
+    // al volver, llega desde la izquierda. Usa las mismas transiciones
+    // que el perfil del alumno (components/Transiciones.kt).
+    AnimatedContent(
+        targetState = vista,
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = {
+            Transiciones.lateral(
+                haciaAdelante = targetState.nivel() > initialState.nivel()
+            )
+        },
+        label = "vistaUtp"
+    ) { vistaActual ->
 
-    } else if (unidadAbierta != null) {
+        when (vistaActual) {
 
-        // =============================================
-        // VISTA DE REVISIÓN: contenido + TODAS las preguntas
-        // =============================================
-        DetalleUnidadUtp(
-            unidad = unidadAbierta,
-            preguntas = viewModel.preguntasDe(unidadAbierta.id),
-            puedeEditar = viewModel.puedeEditarse(unidadAbierta),
-            siguienteIdPregunta = viewModel.siguienteIdPregunta(),
-            onVolver = { unidadAbiertaId = null },
-            onCambiarEstado = { nuevo -> viewModel.cambiarEstado(unidadAbierta.id, nuevo) },
-            onAgregarPregunta = { pregunta -> viewModel.agregarPregunta(pregunta) },
-            onEliminarPregunta = { id -> viewModel.eliminarPregunta(id) }
-        )
-
-    } else {
-
-        // =============================================
-        // VISTA NORMAL: menú lateral + pestañas
-        // =============================================
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                ModalDrawerSheet {
-                    Text(
-                        text = "Jefatura UTP",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                    HorizontalDivider()
-
-                    NavigationDrawerItem(
-                        label = { Text("Unidades") },
-                        selected = pestana == 0,
-                        onClick = {
-                            pestana = 0
-                            scope.launch { drawerState.close() }
+            // =============================================
+            // EDITAR UNA UNIDAD EXISTENTE
+            // =============================================
+            is VistaUtp.Editando -> {
+                val unidad = viewModel.unidadPorId(vistaActual.id)
+                if (unidad != null) {
+                    PantallaEditarUnidad(
+                        unidad = unidad,
+                        // Los códigos de las OTRAS unidades (la propia no cuenta como repetida).
+                        codigosOtros = viewModel.unidades
+                            .filter { it.id != unidad.id }
+                            .map { it.codigoOA },
+                        onGuardar = { unidadModificada ->
+                            val error = viewModel.editarUnidad(unidadModificada)
+                            if (error == null) {
+                                unidadEditandoId = null
+                                scope.launch { snackbarHostState.showSnackbar("Cambios guardados.") }
+                            }
+                            error
                         },
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-                    NavigationDrawerItem(
-                        label = { Text("Nueva unidad") },
-                        selected = pestana == 1,
-                        onClick = {
-                            pestana = 1
-                            scope.launch { drawerState.close() }
-                        },
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    )
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
-                    NavigationDrawerItem(
-                        label = { Text("Cerrar sesión") },
-                        selected = false,
-                        onClick = { onCerrarSesion() },
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        onVolver = { unidadEditandoId = null }
                     )
                 }
             }
-        ) {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
 
-                snackbarHost = { SnackbarHost(snackbarHostState) },
+            // =============================================
+            // VISTA DE REVISIÓN: contenido + TODAS las preguntas
+            // =============================================
+            is VistaUtp.Detalle -> {
+                val unidad = viewModel.unidadPorId(vistaActual.id)
+                if (unidad != null) {
+                    DetalleUnidadUtp(
+                        unidad = unidad,
+                        preguntas = viewModel.preguntasDe(unidad.id),
+                        puedeEditar = viewModel.puedeEditarse(unidad),
+                        siguienteIdPregunta = viewModel.siguienteIdPregunta(),
+                        onVolver = { unidadAbiertaId = null },
+                        onCambiarEstado = { nuevo -> viewModel.cambiarEstado(unidad.id, nuevo) },
+                        onAgregarPregunta = { pregunta -> viewModel.agregarPregunta(pregunta) },
+                        onEliminarPregunta = { id -> viewModel.eliminarPregunta(id) }
+                    )
+                }
+            }
 
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(if (pestana == 0) "Unidades" else "Nueva unidad")
+            // =============================================
+            // VISTA NORMAL: menú lateral + pestañas
+            // =============================================
+            VistaUtp.Lista -> {
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            Text(
+                                text = "Jefatura UTP",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            HorizontalDivider()
+
+                            NavigationDrawerItem(
+                                label = { Text("Unidades") },
+                                selected = pestana == 0,
+                                onClick = {
+                                    pestana = 0
+                                    scope.launch { drawerState.close() }
+                                },
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            NavigationDrawerItem(
+                                label = { Text("Nueva unidad") },
+                                selected = pestana == 1,
+                                onClick = {
+                                    pestana = 1
+                                    scope.launch { drawerState.close() }
+                                },
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                            NavigationDrawerItem(
+                                label = { Text("Cerrar sesión") },
+                                selected = false,
+                                onClick = { onCerrarSesion() },
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+                    }
+                ) {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+
+                        snackbarHost = { SnackbarHost(snackbarHostState) },
+
+                        topBar = {
+                            TopAppBar(
+                                title = {
+                                    Text(if (pestana == 0) "Unidades" else "Nueva unidad")
+                                },
+                                actions = {
+                                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Menu,
+                                            contentDescription = "Abrir menú"
+                                        )
+                                    }
+                                }
+                            )
                         },
-                        actions = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Menu,
-                                    contentDescription = "Abrir menú"
+
+                        bottomBar = {
+                            NavigationBar {
+                                NavigationBarItem(
+                                    selected = pestana == 0,
+                                    onClick = { pestana = 0 },
+                                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Unidades") },
+                                    label = { Text("Unidades") }
+                                )
+                                NavigationBarItem(
+                                    selected = pestana == 1,
+                                    onClick = { pestana = 1 },
+                                    icon = { Icon(Icons.Filled.Add, contentDescription = "Nueva unidad") },
+                                    label = { Text("Nueva") }
                                 )
                             }
                         }
-                    )
-                },
+                    ) { innerPadding ->
 
-                bottomBar = {
-                    NavigationBar {
-                        NavigationBarItem(
-                            selected = pestana == 0,
-                            onClick = { pestana = 0 },
-                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Unidades") },
-                            label = { Text("Unidades") }
-                        )
-                        NavigationBarItem(
-                            selected = pestana == 1,
-                            onClick = { pestana = 1 },
-                            icon = { Icon(Icons.Filled.Add, contentDescription = "Nueva unidad") },
-                            label = { Text("Nueva") }
-                        )
-                    }
-                }
-            ) { innerPadding ->
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(16.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    when (pestana) {
-                        0 -> ListaUnidadesUtp(
-                            unidades = viewModel.unidades,
-                            puedeEditar = { unidad -> viewModel.puedeEditarse(unidad) },
-                            onAbrir = { unidad -> unidadAbiertaId = unidad.id },
-                            onEditar = { unidad -> unidadEditandoId = unidad.id }
-                        )
-                        else -> FormularioUnidad(
-                            codigosExistentes = viewModel.unidades.map { it.codigoOA },
-                            siguienteId = viewModel.siguienteIdUnidad(),
-                            onGuardar = { unidadNueva ->
-                                // Se guarda en el teléfono, se vuelve a la
-                                // pestaña Unidades y se avisa cómo salió.
-                                val error = viewModel.crearUnidad(unidadNueva)
-                                pestana = 0
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        error ?: "Unidad creada como borrador."
-                                    )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                                .padding(16.dp)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Animación al cambiar de pestaña: "Nueva" está a la
+                            // derecha de "Unidades", así que entra desde la derecha.
+                            AnimatedContent(
+                                targetState = pestana,
+                                transitionSpec = {
+                                    Transiciones.lateral(haciaAdelante = targetState > initialState)
+                                },
+                                label = "pestanaUtp"
+                            ) { pestanaActual ->
+                                // Este Column es necesario: AnimatedContent apila lo
+                                // que haya adentro, y la lista dibuja varias tarjetas.
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    when (pestanaActual) {
+                                        0 -> ListaUnidadesUtp(
+                                            unidades = viewModel.unidades,
+                                            puedeEditar = { unidad -> viewModel.puedeEditarse(unidad) },
+                                            onAbrir = { unidad -> unidadAbiertaId = unidad.id },
+                                            onEditar = { unidad -> unidadEditandoId = unidad.id }
+                                        )
+                                        else -> FormularioUnidad(
+                                            codigosExistentes = viewModel.unidades.map { it.codigoOA },
+                                            siguienteId = viewModel.siguienteIdUnidad(),
+                                            onGuardar = { unidadNueva ->
+                                                // Se guarda en el teléfono, se vuelve a la
+                                                // pestaña Unidades y se avisa cómo salió.
+                                                val error = viewModel.crearUnidad(unidadNueva)
+                                                pestana = 0
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        error ?: "Unidad creada como borrador."
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                        )
+                        }
                     }
                 }
             }
