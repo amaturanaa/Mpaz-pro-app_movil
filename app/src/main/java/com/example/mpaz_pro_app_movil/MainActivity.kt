@@ -18,6 +18,8 @@ import com.example.mpaz_pro_app_movil.screens.DocenteScreen
 import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
 import com.example.mpaz_pro_app_movil.screens.UtpScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 
 
 // ACTIVIDAD PRINCIPAL: PUNTO DE ENTRADA DE LA APP
@@ -42,9 +44,12 @@ fun AplicacionMPAZ() {
 
     // null = todavía no hay ninguna sesión iniciada.
     // Al ingresar correctamente, guardamos la cuenta.
-    // El valor se guarda solo EN MEMORIA para la demo;
-    // cuando se cierre la aplicación se pedirá ingreso otra vez.
-    var usuarioActivo by remember {
+    //
+    // rememberSaveable (en vez de remember) hace que la sesión
+    // sobreviva cuando Android recrea la pantalla, por ejemplo al
+    // girar el celular. Si se cierra la app del todo, se vuelve a
+    // pedir ingreso. Nunca se guarda la clave, solo usuario, nombre y rol.
+    var usuarioActivo by rememberSaveable(stateSaver = SaverUsuarioDemo) {
         mutableStateOf<UsuarioDemo?>(null)
     }
 
@@ -108,3 +113,23 @@ fun AplicacionMPAZ() {
         }
     }
 }
+
+// Convierte el usuario en una lista simple de textos para guardarla
+// y lo reconstruye al volver. null = sin sesión.
+private val SaverUsuarioDemo = listSaver<UsuarioDemo?, String>(
+    save = { usuario ->
+        if (usuario == null) emptyList()
+        else listOf(usuario.usuario, usuario.nombre, usuario.rol.name)
+    },
+    restore = { datos ->
+        if (datos.size == 3) {
+            UsuarioDemo(
+                usuario = datos[0],
+                nombre = datos[1],
+                rol = RolUsuario.valueOf(datos[2])
+            )
+        } else {
+            null
+        }
+    }
+)
