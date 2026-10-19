@@ -67,17 +67,6 @@ data class Asignacion(
     val permitirVerRespuestas: Boolean = true
 )
 
-// El resultado de un intento de la prueba final.
-data class Resultado(
-    val id: Int,
-    val estudianteId: Int,
-    val unidadId: Int,
-    val intento: Int,
-    val puntaje: Int,
-    val totalPreguntas: Int,
-    val respuestas: List<Int>,
-    val fecha: String
-)
 
 // Comentario que el docente deja sobre un estudiante en una unidad.
 data class Observacion(
