@@ -66,6 +66,7 @@ reemplaza la labor ni la evaluación del docente.
 - Recibe su nota en escala de 1,0 a 7,0. La opción de revisar las respuestas
   aparece solo si el docente la habilitó al asignar la unidad.
 - Realiza una actividad con la cámara en Ciencias Naturales (animales).
+- Ve su avance: mejor nota, promedio e intentos usados en cada asignatura.
 - No tiene acceso a informes pedagógicos.
 
 ### Cuentas de prueba
@@ -187,7 +188,6 @@ se debe generar una nueva.
 - Room (SQLite) con KSP para la persistencia local
 - SharedPreferences para los resultados de las pruebas
 - Git y GitHub para el control de versiones
-- Trello para la planificación
 
 ## Arquitectura
 
@@ -279,6 +279,9 @@ Es un MVP y estas partes quedan para una siguiente versión:
 - Los intentos se guardan por instalación de la aplicación, no por estudiante.
 - Las contraseñas de las cuentas de prueba se cargan al crear la base de datos.
   Aún no existe una pantalla para restablecerlas.
+- Las notificaciones son locales: el aviso aparece en el dispositivo donde el
+  docente asigna la unidad. Enviarlo al teléfono de cada estudiante requeriría
+  un servidor con notificaciones push.
 - No hay conexión con sistemas del colegio ni un servidor: todo funciona sin internet.
 - Las cuentas de inicio de sesión son de demostración.
 
@@ -294,4 +297,4 @@ genera diagnósticos automáticos con inteligencia artificial.
 - Repositorio: https://github.com/amaturanaa/Mpaz-pro-app_movil
 
 Cada integrante trabaja en su propia rama y los cambios se integran a `main`
-mediante pull requests revisados por el otro integrante.
+mediante pull requests.
