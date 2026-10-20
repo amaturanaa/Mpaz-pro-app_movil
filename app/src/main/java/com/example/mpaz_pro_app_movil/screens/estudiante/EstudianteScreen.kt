@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.screens
+package com.example.mpaz_pro_app_movil.screens.estudiante
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade

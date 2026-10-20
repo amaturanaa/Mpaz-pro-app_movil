@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.screens
+package com.example.mpaz_pro_app_movil.screens.estudiante
 
 // ============================================================
 // ACTIVIDAD DE CIENCIAS NATURALES: EXPLORADORES DE ANIMALES
@@ -13,7 +13,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -24,8 +23,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -148,7 +149,7 @@ private fun copiarFotoGaleria(context: Context, uri: Uri): String {
 
 // Crea una miniatura en memoria, en vez de abrir toda la foto
 // original de la cámara (que puede ser muy grande).
-private fun cargarMiniatura(archivo: File): androidx.compose.ui.graphics.ImageBitmap? {
+private fun cargarMiniatura(archivo: File): ImageBitmap? {
     return try {
         val limites = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(archivo.absolutePath, limites)
@@ -169,7 +170,7 @@ private fun cargarMiniatura(archivo: File): androidx.compose.ui.graphics.ImageBi
 
 @Composable
 fun ActividadAnimalesScreen(onVolver: () -> Unit) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val carpeta = remember(context) { carpetaFotos(context) }
 
