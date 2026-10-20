@@ -17,7 +17,7 @@ val AmarilloClaro = Color(0xFFFFD166)
 val RosadoClaro = Color(0xFFFF8FAE)
 
 // FONDOS DE LA APLICACIÓN
-val FondoPrincipal = Color(0xFFF7F9FF)
+val FondoPrincipal = Color(0xFFF6F8F5)
 val FondoTarjetas = Color(0xFFFFFFFF)
 
 // COLORES PARA TEXTOS

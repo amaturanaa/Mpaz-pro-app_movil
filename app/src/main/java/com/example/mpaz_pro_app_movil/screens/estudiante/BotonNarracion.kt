@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.screens
+package com.example.mpaz_pro_app_movil.screens.estudiante
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.layout.fillMaxWidth

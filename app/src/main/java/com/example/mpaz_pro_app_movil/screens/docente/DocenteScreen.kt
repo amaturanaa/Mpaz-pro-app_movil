@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.screens
+package com.example.mpaz_pro_app_movil.screens.docente
 
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult

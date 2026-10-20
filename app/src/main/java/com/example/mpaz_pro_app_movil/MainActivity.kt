@@ -13,10 +13,10 @@ import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
 // NUEVO: transiciones compartidas de la app.
 import com.example.mpaz_pro_app_movil.components.Transiciones
-import com.example.mpaz_pro_app_movil.screens.LoginScreen
-import com.example.mpaz_pro_app_movil.screens.DocenteScreen
-import com.example.mpaz_pro_app_movil.screens.EstudianteScreen
-import com.example.mpaz_pro_app_movil.screens.UtpScreen
+import com.example.mpaz_pro_app_movil.screens.login.LoginScreen
+import com.example.mpaz_pro_app_movil.screens.docente.DocenteScreen
+import com.example.mpaz_pro_app_movil.screens.estudiante.EstudianteScreen
+import com.example.mpaz_pro_app_movil.screens.utp.UtpScreen
 import com.example.mpaz_pro_app_movil.ui.theme.MPAZ_PRO_APP_MOVILTheme
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable

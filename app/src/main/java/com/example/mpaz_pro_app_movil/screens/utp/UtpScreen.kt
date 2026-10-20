@@ -1,4 +1,4 @@
-package com.example.mpaz_pro_app_movil.screens
+package com.example.mpaz_pro_app_movil.screens.utp
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
