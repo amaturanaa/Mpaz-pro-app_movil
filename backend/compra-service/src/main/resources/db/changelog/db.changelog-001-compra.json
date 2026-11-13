@@ -1,0 +1,62 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1",
+        "author": "carlos",
+        "changes": [
+          {
+            "insert": {
+              "tableName": "compra",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id_cliente",
+                    "valueNumeric": 1
+                  }
+                },
+                {
+                  "column": {
+                    "name": "id_producto",
+                    "valueNumeric": 1
+                  }
+                },
+                {
+                  "column": {
+                    "name": "cantidad",
+                    "valueNumeric": 23
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "insert": {
+              "tableName": "compra",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id_Cliente",
+                    "valueNumeric": 1
+                  }
+                },
+                {
+                  "column": {
+                    "name": "id_Producto",
+                    "valueNumeric": 2
+                  }
+                },
+                {
+                  "column": {
+                    "name": "cantidad",
+                    "valueNumeric": 45
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
