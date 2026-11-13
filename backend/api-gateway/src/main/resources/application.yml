@@ -14,11 +14,15 @@ spring:
   cloud:
     gateway:
       routes:
-
         - id: auth-service
           uri: http://auth-service:9094
           predicates:
             - Path=/auth/**
+
+        - id: contenidos-service
+          uri: http://contenidos-service:9096
+          predicates:
+            - Path=/asignaturas/**,/unidades/**,/objetivos/**,/contenidos/**
 
         - id: cliente-service
           uri: http://cliente-service:9091

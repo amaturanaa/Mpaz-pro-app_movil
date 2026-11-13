@@ -8,7 +8,6 @@ x-common-env: &common-env
   SECRET: "esta_es_mi_compleja_clave_secreta"
 
 services:
-
   mysql:
     image: mysql:8.4
     container_name: mysql-microservicios
@@ -35,6 +34,7 @@ services:
     depends_on:
       - auth-service
       - producto-service
+      - contenidos-service
 
   auth-service:
     build: ./auth-service
@@ -55,6 +55,18 @@ services:
     environment:
       <<: *common-env
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_producto?createDatabaseIfNotExist=true"
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  contenidos-service:
+    build: ./contenidos-service
+    ports:
+      - "9096:9096"
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_contenidos?createDatabaseIfNotExist=true"
     restart: on-failure
     depends_on:
       mysql:
