@@ -1,6 +1,7 @@
 package com.example.contenidos_service.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,13 @@ public class UnidadController {
 	@PutMapping("/{id}")
 	public ResponseEntity<Unidad> actualizar(@PathVariable Long id, @RequestBody Unidad body) {
 		return service.actualizar(id, body).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+	}
+
+	// Cambia solo el estado. Body: {"estado": "En revisión"}
+	@PatchMapping("/{id}/estado")
+	public ResponseEntity<Unidad> cambiarEstado(@PathVariable Long id, @RequestBody Map<String, String> body) {
+		return service.cambiarEstado(id, body.get("estado")).map(ResponseEntity::ok)
+				.orElse(ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{id}")
