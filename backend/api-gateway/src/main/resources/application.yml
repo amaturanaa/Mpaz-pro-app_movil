@@ -24,6 +24,11 @@ spring:
           predicates:
             - Path=/asignaturas/**,/unidades/**,/objetivos/**,/contenidos/**
 
+        - id: admin-service
+          uri: http://admin-service:9099
+          predicates:
+            - Path=/admin/**
+
         - id: cliente-service
           uri: http://cliente-service:9091
           predicates:

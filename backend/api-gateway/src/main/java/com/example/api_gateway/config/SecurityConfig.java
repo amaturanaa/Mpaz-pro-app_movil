@@ -37,6 +37,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/auth/**").permitAll()
+                .pathMatchers("/admin/**").hasRole("UTP")
                 // Consultar contenidos: cualquier perfil
                 .pathMatchers(HttpMethod.GET, RUTAS_CONTENIDOS)
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
