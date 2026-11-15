@@ -54,6 +54,18 @@ public class ObjetivoAprendizajeService {
 		return Optional.of(objetivoRepository.save(datos));
 	}
 
+	/** Cambia solo el estado, respetando el flujo permitido (ver Estados). */
+	public Optional<ObjetivoAprendizaje> cambiarEstado(Long id, String nuevoEstado) {
+		Optional<ObjetivoAprendizaje> existente = objetivoRepository.findById(id);
+		if (existente.isEmpty()) {
+			return Optional.empty();
+		}
+		ObjetivoAprendizaje objetivo = existente.get();
+		Estados.validarTransicion(objetivo.getEstado(), nuevoEstado);
+		objetivo.setEstado(nuevoEstado);
+		return Optional.of(objetivoRepository.save(objetivo));
+	}
+
 	public boolean eliminar(Long id) {
 		if (!objetivoRepository.existsById(id)) {
 			return false;

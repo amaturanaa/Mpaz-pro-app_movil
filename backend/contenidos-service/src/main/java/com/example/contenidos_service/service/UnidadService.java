@@ -54,6 +54,18 @@ public class UnidadService {
 		return Optional.of(unidadRepository.save(datos));
 	}
 
+	/** Cambia solo el estado, respetando el flujo permitido (ver Estados). */
+	public Optional<Unidad> cambiarEstado(Long id, String nuevoEstado) {
+		Optional<Unidad> existente = unidadRepository.findById(id);
+		if (existente.isEmpty()) {
+			return Optional.empty();
+		}
+		Unidad unidad = existente.get();
+		Estados.validarTransicion(unidad.getEstado(), nuevoEstado);
+		unidad.setEstado(nuevoEstado);
+		return Optional.of(unidadRepository.save(unidad));
+	}
+
 	public boolean eliminar(Long id) {
 		if (!unidadRepository.existsById(id)) {
 			return false;
