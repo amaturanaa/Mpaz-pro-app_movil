@@ -7,17 +7,19 @@ import com.example.auth.repository.UserRepository;
 
 @Service
 public class UserService {
-    
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private JwtService jwtService;
-    
+
     @Autowired
     private HashService hashService;
-    
+
     public String login (String email, String password) {
+        if (email == null || password == null) return null;
+
         User user = userRepository.findByEmail(email);
 
         if (user == null) return null;
@@ -25,15 +27,20 @@ public class UserService {
         String hashedInput = hashService.sha1(password);
         if (!hashedInput.equals(user.getPassword())) return null;
 
-        return jwtService.generateToken(email);
+        // el token incluye el rol del usuario
+        return jwtService.generateToken(email, user.getRole());
     }
 
     public String getRole(String email){
         User user = userRepository.findByEmail(email);
-        return user.getRole();
+        return user == null ? null : user.getRole();
     }
 
     public String register(String email, String password) {
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            return "Email y password son obligatorios";
+        }
+
         User existing = userRepository.findByEmail(email);
         if (existing != null) {
             return "Usuario ya existe!";
@@ -43,7 +50,9 @@ public class UserService {
         user.setEmail(email);
         // store SHA-1 hash of the password
         user.setPassword(hashService.sha1(password));
-        user.setRole("USER");
+        // El registro público siempre crea estudiantes.
+        // Los roles UTP y DOCENTE se crean al iniciar el servicio (DatosIniciales).
+        user.setRole("ESTUDIANTE");
 
         userRepository.save(user);
 

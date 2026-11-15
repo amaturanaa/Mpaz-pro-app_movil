@@ -15,15 +15,15 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private final Key key = Keys.hmacShaKeyFor("esta_es_mi_compleja_clave_secreta".getBytes());
-//    private final Key key = Keys.hmacShaKeyFor("9f3c2a87d1e64b55c6f4ab90e1d73c5f2d89b7aa34df56e0a1bf92c47e68d12f".getBytes());
 
-
-    public String generateToken(String email) {
+    // El token ahora lleva el rol del usuario (UTP, DOCENTE o ESTUDIANTE)
+    public String generateToken(String email, String role) {
         Date ahora = new Date();
         Date expiration = new Date(ahora.getTime() + 1000 * 60 * 60);
         return Jwts.builder()
         .subject(email)
-        .issuedAt(new Date())
+        .claim("role", role)
+        .issuedAt(ahora)
         .expiration(expiration)
         .signWith(key)
         .compact();
