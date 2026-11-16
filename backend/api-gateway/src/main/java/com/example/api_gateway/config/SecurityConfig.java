@@ -23,12 +23,17 @@ import reactor.core.publisher.Flux;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private static final String[] strings = {
+            "/asignaturas/**", "/unidades/**", "/objetivos/**", "/contenidos/**"
+    };
     @Value("${spring.security.oauth2.resourceserver.jwt.secret-key}")
     private String secret;
 
     // Rutas del microservicio de contenidos
-    private static final String[] RUTAS_CONTENIDOS = {
-        "/asignaturas/**", "/unidades/**", "/objetivos/**", "/contenidos/**"
+    private static final String[] RUTAS_CONTENIDOS = strings;
+    // Rutas del microservicio de actividades
+    private static final String[] RUTAS_ACTIVIDADES = {
+            "/desafios/**", "/pruebas/**", "/preguntas/**"
     };
 
     @Bean
@@ -43,6 +48,11 @@ public class SecurityConfig {
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
                 // Crear, editar o borrar contenidos: solo UTP
                 .pathMatchers(RUTAS_CONTENIDOS).hasRole("UTP")
+                    // Consultar actividades: cualquier perfil
+                    .pathMatchers(HttpMethod.GET, RUTAS_ACTIVIDADES)
+                    .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
+                    // Crear, editar o borrar actividades: solo UTP
+                    .pathMatchers(RUTAS_ACTIVIDADES).hasRole("UTP")
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
