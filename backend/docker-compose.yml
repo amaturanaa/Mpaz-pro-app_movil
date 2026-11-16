@@ -84,6 +84,21 @@ services:
       mysql:
         condition: service_healthy
 
+  actividades-service:
+    build: ./actividades-service
+    ports:
+      - "9097:9097"
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_actividades?createDatabaseIfNotExist=true"
+      CONTENIDOS_URL: "http://contenidos-service:9096"
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+      contenidos-service:
+        condition: service_started
+
   cliente-service:
     build: ./cliente-service
     ports:
