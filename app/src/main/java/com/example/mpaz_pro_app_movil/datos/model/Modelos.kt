@@ -19,7 +19,7 @@ fun EstadoUnidad.siguientesPermitidos(): List<EstadoUnidad> = when (this) {
     EstadoUnidad.EN_REVISION -> listOf(EstadoUnidad.AUTORIZADO, EstadoUnidad.BORRADOR)
     EstadoUnidad.AUTORIZADO -> listOf(EstadoUnidad.PUBLICADO)
     EstadoUnidad.PUBLICADO -> listOf(EstadoUnidad.DESHABILITADO)
-    EstadoUnidad.DESHABILITADO -> listOf(EstadoUnidad.PUBLICADO)
+    EstadoUnidad.DESHABILITADO -> listOf(EstadoUnidad.BORRADOR)
 }
 
 // Una unidad didáctica: lo que crea la UTP para una asignatura.

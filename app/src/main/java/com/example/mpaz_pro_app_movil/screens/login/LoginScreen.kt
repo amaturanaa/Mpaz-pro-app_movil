@@ -65,7 +65,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
     // ve claramente que tocó otra opción. El cambio dura 400 ms.
     val colorTarjeta by animateColorAsState(
         targetValue = when (rolSeleccionado) {
-            RolUsuario.ALUMNO -> Color(0xFFEDF5FF)   // celeste (el color original)
+            RolUsuario.ALUMNO -> Color(0xFFCACFEC)   // celeste (el color original)
             RolUsuario.DOCENTE -> Color(0xFFE8F5E9)  // verde claro
             RolUsuario.UTP -> Color(0xFFFFF8E1)      // amarillo claro
         },
@@ -336,9 +336,9 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     "Cuentas de prueba",
                     fontWeight = FontWeight.SemiBold
                 )
-                Text("Alumno: alumno / Alumno123!")
-                Text("Docente: docente / Docente123!")
-                Text("UTP: utp / Utp12345!")
+                Text("Alumno: estudiante@mpaz.cl / 123456")
+                Text("Docente: docente@mpaz.cl / 123456")
+                Text("UTP: utp@mpaz.cl / 123456")
                 Text(
                     "Acceso demostrativo: no usar datos reales.",
                     style = MaterialTheme.typography.bodySmall
