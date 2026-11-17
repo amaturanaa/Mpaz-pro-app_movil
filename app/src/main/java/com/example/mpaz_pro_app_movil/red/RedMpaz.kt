@@ -9,6 +9,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -95,20 +96,41 @@ interface ApiMpaz {
     @GET("asignaturas")
     suspend fun asignaturas(): List<AsignaturaApi>
 
+    // Unidades
     @GET("unidades")
     suspend fun unidades(): List<UnidadApi>
 
-    @GET("objetivos")
-    suspend fun objetivos(@Query("unidadId") unidadId: Long): List<ObjetivoApi>
+    @POST("unidades")
+    suspend fun crearUnidad(@Body unidad: UnidadApi): UnidadApi
 
-    @GET("contenidos")
-    suspend fun contenidos(@Query("objetivoId") objetivoId: Long): List<ContenidoApi>
+    @PUT("unidades/{id}")
+    suspend fun actualizarUnidad(@Path("id") id: Long, @Body unidad: UnidadApi): UnidadApi
 
     @PATCH("unidades/{id}/estado")
     suspend fun cambiarEstadoUnidad(
         @Path("id") id: Long,
         @Body cuerpo: CambioEstado
     ): UnidadApi
+
+    // Objetivos de aprendizaje
+    @GET("objetivos")
+    suspend fun objetivos(@Query("unidadId") unidadId: Long): List<ObjetivoApi>
+
+    @POST("objetivos")
+    suspend fun crearObjetivo(@Body objetivo: ObjetivoApi): ObjetivoApi
+
+    @PUT("objetivos/{id}")
+    suspend fun actualizarObjetivo(@Path("id") id: Long, @Body objetivo: ObjetivoApi): ObjetivoApi
+
+    // Contenidos didácticos
+    @GET("contenidos")
+    suspend fun contenidos(@Query("objetivoId") objetivoId: Long): List<ContenidoApi>
+
+    @POST("contenidos")
+    suspend fun crearContenido(@Body contenido: ContenidoApi): ContenidoApi
+
+    @PUT("contenidos/{id}")
+    suspend fun actualizarContenido(@Path("id") id: Long, @Body contenido: ContenidoApi): ContenidoApi
 }
 
 // ---- Conexión al gateway ----

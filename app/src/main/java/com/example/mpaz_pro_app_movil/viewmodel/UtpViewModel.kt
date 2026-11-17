@@ -64,16 +64,30 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
     // Una unidad publicada no se toca: primero hay que deshabilitarla.
     fun puedeEditarse(unidad: Unidad): Boolean = unidad.estado != EstadoUnidad.PUBLICADO
 
+    // Crea la unidad en el backend. Solo si el servidor la acepta, aparece en la lista.
     fun crearUnidad(unidad: Unidad): String? {
-        AlmacenMpaz.unidades.add(unidad)
+        val creada = try {
+            runBlocking(Dispatchers.IO) { RepositorioContenidos.crearUnidad(unidad) }
+        } catch (error: Exception) {
+            Log.e("UtpViewModel", "el backend no aceptó crear la unidad", error)
+            return mensajeDeRed(error, "crear la unidad")
+        }
+        AlmacenMpaz.unidades.add(creada)
         return if (AlmacenMpaz.guardarUnidades(getApplication())) null else mensajeNoGuardo
     }
 
+    // Edita la unidad en el backend. Solo si el servidor la acepta, cambia en la lista.
     fun editarUnidad(unidad: Unidad): String? {
         val posicion = AlmacenMpaz.unidades.indexOfFirst { it.id == unidad.id }
         if (posicion == -1) return "La unidad ya no existe."
         if (!puedeEditarse(AlmacenMpaz.unidades[posicion])) {
             return "Una unidad publicada no se puede editar. Deshabilítala primero."
+        }
+        try {
+            runBlocking(Dispatchers.IO) { RepositorioContenidos.editarUnidad(unidad) }
+        } catch (error: Exception) {
+            Log.e("UtpViewModel", "el backend no aceptó editar la unidad", error)
+            return mensajeDeRed(error, "editar la unidad")
         }
         AlmacenMpaz.unidades[posicion] = unidad
         return if (AlmacenMpaz.guardarUnidades(getApplication())) null else mensajeNoGuardo
@@ -121,7 +135,7 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
             runBlocking(Dispatchers.IO) { RepositorioContenidos.cambiarEstado(unidadId, nuevo) }
         } catch (error: Exception) {
             Log.e("UtpViewModel", "el backend no aceptó el cambio de estado", error)
-            return mensajeDeRed(error)
+            return mensajeDeRed(error, "cambiar el estado")
         }
 
         AlmacenMpaz.unidades[posicion] = unidad.copy(estado = nuevo)
@@ -129,12 +143,13 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Traduce los errores del servidor a un texto que se entienda.
-    private fun mensajeDeRed(error: Exception): String = when {
-        error is HttpException && error.code() == 403 -> "No tienes permiso para cambiar el estado."
-        error is HttpException && error.code() == 409 -> "El servidor no permite ese cambio de estado."
+    private fun mensajeDeRed(error: Exception, accion: String): String = when {
+        error is HttpException && error.code() == 400 -> "El servidor rechazó los datos al intentar $accion."
+        error is HttpException && error.code() == 403 -> "No tienes permiso para $accion."
         error is HttpException && error.code() == 404 -> "La unidad ya no existe en el servidor."
+        error is HttpException && error.code() == 409 -> "El servidor no permite $accion en este momento."
         error is HttpException -> "El servidor respondió con error ${error.code()}."
         error is IOException -> "No hay conexión con el servidor."
-        else -> "No se pudo cambiar el estado."
+        else -> "No se pudo $accion."
     }
 }
