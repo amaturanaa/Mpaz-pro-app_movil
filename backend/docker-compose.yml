@@ -24,17 +24,6 @@ services:
       retries: 30
       start_period: 20s
 
-  admin-service:
-    build: ./admin-service
-    restart: on-failure
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_admin?createDatabaseIfNotExist=true
-    depends_on:
-      mysql:
-        condition: service_healthy
-      contenidos-service:
-       condition: service_started
-
   api-gateway:
     build: ./api-gateway
     ports:
@@ -44,7 +33,6 @@ services:
     restart: on-failure
     depends_on:
       - auth-service
-      - producto-service
       - contenidos-service
       - admin-service
 
@@ -55,18 +43,6 @@ services:
     environment:
       <<: *common-env
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_users?createDatabaseIfNotExist=true"
-    restart: on-failure
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-  producto-service:
-    build: ./producto-service
-    ports:
-      - "9093:9093"
-    environment:
-      <<: *common-env
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_producto?createDatabaseIfNotExist=true"
     restart: on-failure
     depends_on:
       mysql:
@@ -84,41 +60,49 @@ services:
       mysql:
         condition: service_healthy
 
-  cliente-service:
-    build: ./cliente-service
-    ports:
-      - "9091:9091"
-    environment:
-      <<: *common-env
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_cliente?createDatabaseIfNotExist=true"
+  admin-service:
+    build: ./admin-service
     restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_admin?createDatabaseIfNotExist=true
     depends_on:
       mysql:
         condition: service_healthy
+      contenidos-service:
+        condition: service_started
 
-  compra-service:
-    build: ./compra-service
+  actividades-service:
+    build: ./actividades-service
     ports:
-      - "9092:9092"
+      - "9097:9097"
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_compra?createDatabaseIfNotExist=true"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_actividades?createDatabaseIfNotExist=true"
+      CONTENIDOS_URL: "http://contenidos-service:9096"
     restart: on-failure
     depends_on:
       mysql:
         condition: service_healthy
+      contenidos-service:
+        condition: service_started
 
-  pago-service:
-    build: ./pago-service
+  progreso-service:
+    build: ./progreso-service
     ports:
-      - "9095:9095"
+      - "9098:9098"
     environment:
       <<: *common-env
-      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_pago?createDatabaseIfNotExist=true"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/bd_progreso?createDatabaseIfNotExist=true"
+      ACTIVIDADES_URL: "http://actividades-service:9097"
+      CONTENIDOS_URL: "http://contenidos-service:9096"
     restart: on-failure
     depends_on:
       mysql:
         condition: service_healthy
+      actividades-service:
+        condition: service_started
+      contenidos-service:
+        condition: service_started
 
 volumes:
   mysql-data:

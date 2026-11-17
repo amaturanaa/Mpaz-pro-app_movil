@@ -24,27 +24,17 @@ spring:
           predicates:
             - Path=/asignaturas/**,/unidades/**,/objetivos/**,/contenidos/**
 
+        - id: actividades-service
+          uri: http://actividades-service:9097
+          predicates:
+            - Path=/desafios/**,/pruebas/**,/preguntas/**
+
+        - id: progreso-service
+          uri: http://progreso-service:9098
+          predicates:
+            - Path=/asignaciones/**,/progreso/**,/informes/**,/observaciones/**,/intentos/**
+
         - id: admin-service
           uri: http://admin-service:9099
           predicates:
             - Path=/admin/**
-
-        - id: cliente-service
-          uri: http://cliente-service:9091
-          predicates:
-            - Path=/clientes/**
-
-        - id: compra-service
-          uri: http://compra-service:9092
-          predicates:
-            - Path=/compras/**
-
-        - id: producto-service
-          uri: http://producto-service:9093
-          predicates:
-            - Path=/productos/**
-
-        - id: pago-service
-          uri: http://pago-service:9095
-          predicates:
-            - Path=/pagos/**
