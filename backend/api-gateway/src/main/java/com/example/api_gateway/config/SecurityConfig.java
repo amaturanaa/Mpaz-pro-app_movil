@@ -61,6 +61,8 @@ public class SecurityConfig {
                     // Consultar asignaciones: UTP, docente y estudiante
                     .pathMatchers(HttpMethod.GET, RUTAS_PROGRESO)
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
+                    // Rendir un intento: solo estudiante
+                    .pathMatchers(HttpMethod.POST, "/asignaciones/*/intentos").hasRole("ESTUDIANTE")
                     // Crear, editar o borrar asignaciones: solo docente
                     .pathMatchers(RUTAS_PROGRESO).hasRole("DOCENTE")
                 .anyExchange().authenticated()
