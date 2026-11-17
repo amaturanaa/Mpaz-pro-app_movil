@@ -1,16 +1,24 @@
 package com.example.mpaz_pro_app_movil.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mpaz_pro_app_movil.datos.repositorio.AlmacenMpaz
 import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
 import com.example.mpaz_pro_app_movil.datos.model.Pregunta
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.datos.model.siguientesPermitidos
+import com.example.mpaz_pro_app_movil.red.RepositorioContenidos
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import java.io.IOException
 
-// =============================================
+
 // VIEWMODEL DEL PERFIL UTP
-// =============================================
 // Las pantallas solo muestran y avisan lo que la persona tocó.
 // Las reglas (qué se puede editar, qué cambio de estado es válido)
 // y los guardados viven aquí.
@@ -24,6 +32,22 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         AlmacenMpaz.iniciar(application)
+        cargarDesdeBackend()
+    }
+
+    // Pide las unidades al backend (contenidos-service) y reemplaza la lista.
+    // Si el servidor no responde, se queda con los datos locales.
+    fun cargarDesdeBackend() {
+        viewModelScope.launch {
+            try {
+                val lista = withContext(Dispatchers.IO) { RepositorioContenidos.cargarUnidades() }
+                AlmacenMpaz.unidades.clear()
+                AlmacenMpaz.unidades.addAll(lista)
+                Log.d("UtpViewModel", "unidades cargadas del backend: ${lista.size}")
+            } catch (error: Exception) {
+                Log.e("UtpViewModel", "no se pudieron cargar las unidades del backend", error)
+            }
+        }
     }
 
     val unidades: List<Unidad> get() = AlmacenMpaz.unidades
@@ -92,7 +116,25 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
             return "Agrega al menos una pregunta antes de enviar la unidad a revisión."
         }
 
+        // 3. Se avisa al backend. Solo si lo acepta, el cambio se ve en la pantalla.
+        try {
+            runBlocking(Dispatchers.IO) { RepositorioContenidos.cambiarEstado(unidadId, nuevo) }
+        } catch (error: Exception) {
+            Log.e("UtpViewModel", "el backend no aceptó el cambio de estado", error)
+            return mensajeDeRed(error)
+        }
+
         AlmacenMpaz.unidades[posicion] = unidad.copy(estado = nuevo)
         return if (AlmacenMpaz.guardarUnidades(getApplication())) null else mensajeNoGuardo
+    }
+
+    // Traduce los errores del servidor a un texto que se entienda.
+    private fun mensajeDeRed(error: Exception): String = when {
+        error is HttpException && error.code() == 403 -> "No tienes permiso para cambiar el estado."
+        error is HttpException && error.code() == 409 -> "El servidor no permite ese cambio de estado."
+        error is HttpException && error.code() == 404 -> "La unidad ya no existe en el servidor."
+        error is HttpException -> "El servidor respondió con error ${error.code()}."
+        error is IOException -> "No hay conexión con el servidor."
+        else -> "No se pudo cambiar el estado."
     }
 }

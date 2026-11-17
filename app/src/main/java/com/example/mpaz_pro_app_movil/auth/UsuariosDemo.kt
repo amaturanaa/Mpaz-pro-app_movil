@@ -2,16 +2,14 @@ package com.example.mpaz_pro_app_movil.auth
 
 import android.content.Context
 import android.util.Log
-import com.example.mpaz_pro_app_movil.datos.BaseDatosMpaz
-import com.example.mpaz_pro_app_movil.datos.dao.UsuarioDao
-import com.example.mpaz_pro_app_movil.datos.entidad.UsuarioEntidad
+import com.example.mpaz_pro_app_movil.red.LoginRequest
+import com.example.mpaz_pro_app_movil.red.RedMpaz
+import com.example.mpaz_pro_app_movil.red.Sesion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-// =============================================
-// MODELOS DE AUTENTICACIÓN PARA LA DEMOSTRACIÓN
-// =============================================
 
+// MODELOS DE AUTENTICACIÓN
 // Enum representa los tres tipos de perfil.
 // Cada usuario tendrá exactamente uno de estos roles.
 enum class RolUsuario(val nombreVisible: String) {
@@ -28,54 +26,26 @@ data class UsuarioDemo(
     val rol: RolUsuario
 )
 
-// =============================================
-// INICIO DE SESIÓN CON CLAVE CIFRADA
-// =============================================
-// Las cuentas viven en la tabla "usuarios" de la base de datos local (Room).
-// En esa tabla NO está la contraseña: solo su versión cifrada y la sal
-// (ver ClaveSegura). No usa internet, Firebase ni un servidor externo.
+// INICIO DE SESIÓN CON EL BACKEND (auth-service)
+// Se envía el correo y la clave a POST /auth/login del gateway.
+// El backend devuelve un token (JWT) con el rol dentro; la app lo
+// guarda en Sesion y lo envía en cada petición siguiente.
 object AutenticacionDemo {
 
     private const val ETIQUETA = "Autenticacion"
 
-    // Las tres cuentas ficticias con las que arranca la demostración.
-    // Estas contraseñas solo se usan una vez, para crear las cuentas: se
-    // cifran antes de guardarse y después ya no se leen de aquí.
-    private class CuentaInicial(
-        val usuario: String,
-        val contrasena: String,
-        val nombre: String,
-        val rol: RolUsuario
-    )
-
-    private val cuentasIniciales = listOf(
-        CuentaInicial("alumno", "Alumno123!", "Estudiante de prueba", RolUsuario.ALUMNO),
-        CuentaInicial("docente", "Docente123!", "Docente de prueba", RolUsuario.DOCENTE),
-        CuentaInicial("utp", "Utp12345!", "Jefatura UTP de prueba", RolUsuario.UTP)
-    )
-
-    // Si todavía no hay usuarios guardados, los crea con la clave cifrada.
-    private suspend fun crearCuentasIniciales(dao: UsuarioDao) {
-        if (dao.cantidad() > 0) return
-
-        val filas = cuentasIniciales.map { cuenta ->
-            // Cada usuario tiene su propia sal.
-            val sal = ClaveSegura.generarSal()
-            UsuarioEntidad(
-                usuario = cuenta.usuario.lowercase(),
-                nombre = cuenta.nombre,
-                rol = cuenta.rol.name,
-                sal = sal,
-                claveCifrada = ClaveSegura.cifrar(cuenta.contrasena, sal)
-            )
-        }
-        dao.insertar(filas)
-        Log.d(ETIQUETA, "cuentas iniciales creadas con clave cifrada")
+    // El backend llama ESTUDIANTE al perfil que la app llama ALUMNO.
+    private fun rolDesdeBackend(rol: String?): RolUsuario? = when (rol) {
+        "UTP" -> RolUsuario.UTP
+        "DOCENTE" -> RolUsuario.DOCENTE
+        "ESTUDIANTE" -> RolUsuario.ALUMNO
+        else -> null
     }
 
-    // Comprueba el perfil elegido, el usuario y la clave.
+    // Comprueba el perfil elegido, el correo y la clave en el backend.
     // Si todo coincide, entrega el usuario válido; si algo está mal, null.
-    // Trabaja en segundo plano porque cifrar la clave toma un momento.
+    // Trabaja en segundo plano porque usa la red.
+    @Suppress("UNUSED_PARAMETER")
     suspend fun validar(
         contexto: Context,
         rolSeleccionado: RolUsuario,
@@ -83,30 +53,33 @@ object AutenticacionDemo {
         contrasenaIngresada: String
     ): UsuarioDemo? = withContext(Dispatchers.IO) {
         try {
-            val dao = BaseDatosMpaz.obtener(contexto).usuarioDao()
-            crearCuentasIniciales(dao)
+            val correo = usuarioIngresado.trim().lowercase()
+            val respuesta = RedMpaz.api.login(LoginRequest(correo, contrasenaIngresada))
+            val token = respuesta.token
 
-            val cuenta = dao.buscar(usuarioIngresado.trim().lowercase())
-                ?: return@withContext null
+            if (respuesta.status != "ok" || token.isNullOrBlank()) {
+                return@withContext null
+            }
 
-            val rolDeLaCuenta = runCatching { RolUsuario.valueOf(cuenta.rol) }.getOrNull()
-                ?: return@withContext null
+            // Guardamos el token para que las próximas peticiones lo lleven.
+            Sesion.token = token
+
+            val rolDeLaCuenta = rolDesdeBackend(Sesion.rol)
 
             // El perfil elegido tiene que ser el de la cuenta.
-            if (rolDeLaCuenta != rolSeleccionado) return@withContext null
-
-            // La clave escrita se cifra y se compara con la guardada.
-            if (!ClaveSegura.coincide(contrasenaIngresada, cuenta.sal, cuenta.claveCifrada)) {
+            if (rolDeLaCuenta == null || rolDeLaCuenta != rolSeleccionado) {
+                Sesion.cerrar()
                 return@withContext null
             }
 
             UsuarioDemo(
-                usuario = cuenta.usuario,
-                nombre = cuenta.nombre,
+                usuario = correo,
+                nombre = correo,
                 rol = rolDeLaCuenta
             )
         } catch (error: Exception) {
-            Log.e(ETIQUETA, "validar: no se pudo comprobar la cuenta", error)
+            Log.e(ETIQUETA, "validar: no se pudo iniciar sesión en el backend", error)
+            Sesion.cerrar()
             null
         }
     }
