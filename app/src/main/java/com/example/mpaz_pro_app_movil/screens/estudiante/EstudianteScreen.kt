@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.mpaz_pro_app_movil.components.Transiciones
+import com.example.mpaz_pro_app_movil.components.MiradaAlMundo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -496,6 +497,9 @@ fun ContenidoAsignaturas(
         VerdeClaro,
         AmarilloClaro
     )
+
+    // Conectando aprendo (API externa: Wikipedia)
+    MiradaAlMundo()
 
     // Creamos una tarjeta por asignatura.
     asignaturas.forEachIndexed { indice, asignatura ->
