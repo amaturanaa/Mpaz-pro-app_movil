@@ -32,7 +32,7 @@ spring:
         - id: progreso-service
           uri: http://progreso-service:9098
           predicates:
-            - Path=/asignaciones/**,/progreso/**,/informes/**,/observaciones/**
+            - Path=/asignaciones/**,/progreso/**,/informes/**,/observaciones/**,/intentos/**
 
         - id: admin-service
           uri: http://admin-service:9099
