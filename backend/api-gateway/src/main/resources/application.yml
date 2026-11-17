@@ -29,6 +29,11 @@ spring:
           predicates:
             - Path=/desafios/**,/pruebas/**,/preguntas/**
 
+        - id: progreso-service
+          uri: http://progreso-service:9098
+          predicates:
+            - Path=/asignaciones/**
+
         - id: admin-service
           uri: http://admin-service:9099
           predicates:

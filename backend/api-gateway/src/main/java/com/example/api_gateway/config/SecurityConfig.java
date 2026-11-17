@@ -36,6 +36,11 @@ public class SecurityConfig {
             "/desafios/**", "/pruebas/**", "/preguntas/**"
     };
 
+    // Rutas del microservicio de progreso
+    private static final String[] RUTAS_PROGRESO = {
+            "/asignaciones/**"
+    };
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
@@ -53,6 +58,11 @@ public class SecurityConfig {
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
                     // Crear, editar o borrar actividades: solo UTP
                     .pathMatchers(RUTAS_ACTIVIDADES).hasRole("UTP")
+                    // Consultar asignaciones: UTP, docente y estudiante
+                    .pathMatchers(HttpMethod.GET, RUTAS_PROGRESO)
+                    .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
+                    // Crear, editar o borrar asignaciones: solo docente
+                    .pathMatchers(RUTAS_PROGRESO).hasRole("DOCENTE")
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
