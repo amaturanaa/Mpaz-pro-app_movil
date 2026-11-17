@@ -38,7 +38,7 @@ public class SecurityConfig {
 
     // Rutas del microservicio de progreso
     private static final String[] RUTAS_PROGRESO = {
-            "/asignaciones/**"
+            "/asignaciones/**", "/progreso/**", "/informes/**"
     };
 
     @Bean
@@ -58,6 +58,8 @@ public class SecurityConfig {
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
                     // Crear, editar o borrar actividades: solo UTP
                     .pathMatchers(RUTAS_ACTIVIDADES).hasRole("UTP")
+                    // Informes: solo docente
+                    .pathMatchers(HttpMethod.GET, "/informes/**").hasRole("DOCENTE")
                     // Consultar asignaciones: UTP, docente y estudiante
                     .pathMatchers(HttpMethod.GET, RUTAS_PROGRESO)
                     .hasAnyRole("UTP", "DOCENTE", "ESTUDIANTE")
