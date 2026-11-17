@@ -13,6 +13,7 @@ import com.example.progreso_service.client.ActividadesClient;
 import com.example.progreso_service.client.ObjetivoClient;
 import com.example.progreso_service.model.Asignacion;
 import com.example.progreso_service.repository.AsignacionRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class AsignacionService {
@@ -59,7 +60,12 @@ public class AsignacionService {
         if (!repository.existsById(id)) {
             return false;
         }
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede eliminar: la asignacion ya tiene intentos");
+        }
         return true;
     }
 
