@@ -38,23 +38,3 @@ spring:
           uri: http://admin-service:9099
           predicates:
             - Path=/admin/**
-
-        - id: cliente-service
-          uri: http://cliente-service:9091
-          predicates:
-            - Path=/clientes/**
-
-        - id: compra-service
-          uri: http://compra-service:9092
-          predicates:
-            - Path=/compras/**
-
-        - id: producto-service
-          uri: http://producto-service:9093
-          predicates:
-            - Path=/productos/**
-
-        - id: pago-service
-          uri: http://pago-service:9095
-          predicates:
-            - Path=/pagos/**
