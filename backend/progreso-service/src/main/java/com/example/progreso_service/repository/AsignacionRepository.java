@@ -13,4 +13,6 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
     List<Asignacion> findByCurso(String curso);
 
     boolean existsByPruebaIdAndCurso(Long pruebaId, String curso);
+
+    boolean existsByObjetivoId(Long objetivoId);
 }
