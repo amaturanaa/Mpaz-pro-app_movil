@@ -7,7 +7,7 @@ import com.example.mpaz_pro_app_movil.datos.model.Unidad
 class RepositorioPruebas(private val api: ApiMpaz = RedMpaz.api) {
 
     // La prueba de una unidad es la del primer objetivo de esa unidad.
-    private suspend fun pruebaDeUnidad(unidad: Unidad): PruebaApi? {
+    suspend fun pruebaDeUnidad(unidad: Unidad): PruebaApi? {
         val objetivoId = api.objetivos(unidad.id.toLong()).firstOrNull()?.id ?: return null
         return api.pruebas(objetivoId).firstOrNull()
     }

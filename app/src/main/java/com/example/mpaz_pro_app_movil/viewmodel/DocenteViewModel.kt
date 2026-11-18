@@ -11,6 +11,14 @@ import com.example.mpaz_pro_app_movil.datos.model.Observacion
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 import com.example.mpaz_pro_app_movil.validacion.Validador
+import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import com.example.mpaz_pro_app_movil.red.RepositorioAsignaciones
 
 // Resultados reales de una unidad: lo que el estudiante hizo en su prueba.
 data class InformeUnidad(
@@ -31,6 +39,7 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         AlmacenMpaz.iniciar(application)
+        cargarDesdeBackend()
     }
 
     // El docente solo ve las unidades que la UTP ya publicó.
@@ -59,44 +68,41 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
     ): String? {
         val unidad = unidadPorId(unidadId) ?: return "La unidad ya no existe."
 
-        // Bloqueo 1: solo unidades publicadas.
         if (unidad.estado != EstadoUnidad.PUBLICADO) {
             return "Solo se pueden asignar unidades publicadas."
         }
-
-        // Bloqueo 2: no repetir la misma unidad en el mismo curso.
         if (AlmacenMpaz.asignaciones.any { it.unidadId == unidadId && it.curso == curso }) {
             return "Esta unidad ya está asignada a $curso."
         }
 
-        // Bloqueo 3: fechas e intentos válidos (se revisan otra vez aquí
-        // por seguridad, aunque el formulario ya los revisó).
         val inicio = Fechas.aIso(inicioVisible) ?: return "La fecha de inicio no es válida."
         val fin = Fechas.aIso(finVisible) ?: return "La fecha de término no es válida."
         Validador.rangoFechasIso(inicio, fin)?.let { return it }
         Validador.intentos(maxIntentos)?.let { return it }
 
-        val nueva = Asignacion(
-            id = (AlmacenMpaz.asignaciones.maxOfOrNull { it.id } ?: 0) + 1,
-            unidadId = unidadId,
-            curso = curso,
-            fechaInicio = inicio,
-            fechaFin = fin,
-            maxIntentos = maxIntentos,
-            notificarCurso = notificarCurso,
-            permitirVerRespuestas = permitirVerRespuestas
-        )
-        val esLaPrimeraAsignacion = AlmacenMpaz.asignaciones.none { it.unidadId == unidadId }
-        AlmacenMpaz.asignaciones.add(nueva)
+        val creada = try {
+            runBlocking(Dispatchers.IO) {
+                RepositorioAsignaciones().asignar(
+                    unidad, curso, inicio, fin, maxIntentos, permitirVerRespuestas, notificarCurso
+                )
+            }
+        } catch (error: Exception) {
+            Log.e("DocenteViewModel", "el backend no aceptó la asignación", error)
+            return when {
+                error is HttpException && error.code() == 409 ->
+                    "Esta prueba ya fue asignada a $curso."
+                error is HttpException && error.code() == 400 ->
+                    "El servidor rechazó la asignación. Revisa las fechas o que la unidad tenga preguntas."
+                else -> "No se pudo asignar en el servidor. Revisa la conexión."
+            }
+        }
 
-        // La prueba de esta unidad consulta este mismo límite.
+        AlmacenMpaz.asignaciones.add(creada)
+
+        // Lo que todavía usa la prueba local (se quita en el siguiente paso).
         ConfigPruebas.guardarMaxIntentos(getApplication(), unidad.id, maxIntentos)
-        ConfigPruebas.guardarPermitirVerRespuestas(
-            getApplication(), unidad.id, permitirVerRespuestas
-        )
-
-        // Primera vez que se asigna esta unidad: el conteo parte desde cero.
-        if (esLaPrimeraAsignacion) {
+        ConfigPruebas.guardarPermitirVerRespuestas(getApplication(), unidad.id, permitirVerRespuestas)
+        if (AlmacenMpaz.asignaciones.count { it.unidadId == unidadId } == 1) {
             ConfigPruebas.reiniciarResultados(getApplication(), unidad.id)
         }
 
@@ -139,5 +145,18 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
             )
         )
         return if (AlmacenMpaz.guardarObservaciones(getApplication())) null else mensajeNoGuardo
+    }
+
+    fun cargarDesdeBackend() {
+        viewModelScope.launch {
+            try {
+                val lista = withContext(Dispatchers.IO) { RepositorioAsignaciones().todasLasAsignaciones() }
+                AlmacenMpaz.asignaciones.clear()
+                AlmacenMpaz.asignaciones.addAll(lista)
+                Log.d("DocenteViewModel", "asignaciones cargadas: ${lista.size}")
+            } catch (error: Exception) {
+                Log.e("DocenteViewModel", "no se pudieron cargar las asignaciones", error)
+            }
+        }
     }
 }
