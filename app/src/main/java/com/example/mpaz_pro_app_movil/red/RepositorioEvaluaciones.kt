@@ -10,6 +10,16 @@ object DatosEstudianteMpaz {
 data class PreguntaRendible(val id: Long, val enunciado: String, val alternativas: List<AlternativaRendible>)
 data class AlternativaRendible(val id: Long, val texto: String)
 
+// Lo que el estudiante necesita para rendir una asignación.
+data class PruebaRemota(
+    val asignacionId: Long,
+    val intentosUsados: Int,
+    val maxIntentos: Int,
+    val mejorNota: Double?,
+    val permiteRevisar: Boolean,
+    val preguntas: List<PreguntaRendible>
+)
+
 class RepositorioEvaluaciones(private val api: ApiMpaz = RedMpaz.api) {
 
     suspend fun preguntasParaRendir(pruebaId: Long): List<PreguntaRendible> =
@@ -39,5 +49,23 @@ class RepositorioEvaluaciones(private val api: ApiMpaz = RedMpaz.api) {
         api.revisarIntento(intentoId, DatosEstudianteMpaz.CODIGO)
 
     suspend fun miAvance(): List<AvanceApi> = api.avance(DatosEstudianteMpaz.CODIGO)
+
+    // Datos de una asignación para el estudiante: intentos, mejor nota y preguntas.
+    suspend fun pruebaDeAsignacion(asignacionId: Long): PruebaRemota {
+        val asignacion = api.asignaciones(DatosEstudianteMpaz.CURSO)
+            .firstOrNull { it.id == asignacionId }
+            ?: throw IllegalStateException("La asignación ya no existe")
+        val avance = api.avance(DatosEstudianteMpaz.CODIGO)
+            .firstOrNull { it.asignacionId == asignacionId }
+
+        return PruebaRemota(
+            asignacionId = asignacionId,
+            intentosUsados = avance?.intentosUsados ?: 0,
+            maxIntentos = asignacion.maxIntentos,
+            mejorNota = avance?.mejorNota,
+            permiteRevisar = asignacion.permiteRevisar,
+            preguntas = preguntasParaRendir(asignacion.pruebaId)
+        )
+    }
 }
 

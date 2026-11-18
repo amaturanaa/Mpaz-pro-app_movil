@@ -8,13 +8,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mpaz_pro_app_movil.datos.model.EstadoUnidad
-import com.example.mpaz_pro_app_movil.datos.model.Pregunta
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.red.DatosEstudianteMpaz
 import com.example.mpaz_pro_app_movil.red.RedMpaz
 import com.example.mpaz_pro_app_movil.red.RepositorioAsignaciones
 import com.example.mpaz_pro_app_movil.red.RepositorioContenidos
-import com.example.mpaz_pro_app_movil.red.RepositorioPruebas
+import com.example.mpaz_pro_app_movil.red.RepositorioEvaluaciones
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,9 +28,12 @@ data class UnidadAsignada(
 )
 
 // UNA PRUEBA QUE EL ALUMNO PUEDE RENDIR
+// Los datos vienen del backend: intentos máximos y usados, y el id de la asignación.
 data class PruebaUnidad(
     val unidad: Unidad,
-    val preguntas: List<Pregunta>
+    val asignacionId: Int,
+    val maxIntentos: Int,
+    val intentosUsados: Int
 )
 
 
@@ -63,18 +65,19 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
         cargarDesdeBackend()
     }
 
-    // Trae unidades, asignaciones del curso y preguntas de cada prueba.
+    // Trae unidades, asignaciones del curso e intentos usados por el alumno.
     // Solo muestra unidades PUBLICADAS que tengan asignación al curso del alumno.
     fun cargarDesdeBackend() {
         viewModelScope.launch {
             cargando = true
             errorCarga = null
             try {
-                val (unidades, asignaciones) = withContext(Dispatchers.IO) {
+                val (unidades, asignaciones, avances) = withContext(Dispatchers.IO) {
                     val unidades = RepositorioContenidos.cargarUnidades()
                     val asignaciones = RepositorioAsignaciones(RedMpaz.api)
                         .todasLasAsignaciones(DatosEstudianteMpaz.CURSO)
-                    unidades to asignaciones
+                    val avances = RepositorioEvaluaciones().miAvance()
+                    Triple(unidades, asignaciones, avances)
                 }
 
                 val asignadas = unidades
@@ -92,12 +95,19 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
                         }
                     }
 
-                val pruebas = withContext(Dispatchers.IO) {
-                    val repo = RepositorioPruebas(RedMpaz.api)
-                    asignadas.mapNotNull { asignada ->
-                        val preguntas = repo.preguntasDeUnidad(asignada.unidad)
-                        if (preguntas.isEmpty()) null else PruebaUnidad(asignada.unidad, preguntas)
-                    }
+                val pruebas = asignaciones.mapNotNull { asignacion ->
+                    val unidad = asignadas.firstOrNull { it.unidad.id == asignacion.unidadId }
+                        ?.unidad
+                        ?: return@mapNotNull null
+                    val usados = avances
+                        .firstOrNull { it.asignacionId == asignacion.id.toLong() }
+                        ?.intentosUsados ?: 0
+                    PruebaUnidad(
+                        unidad = unidad,
+                        asignacionId = asignacion.id,
+                        maxIntentos = asignacion.maxIntentos,
+                        intentosUsados = usados
+                    )
                 }
 
                 unidadesAsignadas = asignadas
