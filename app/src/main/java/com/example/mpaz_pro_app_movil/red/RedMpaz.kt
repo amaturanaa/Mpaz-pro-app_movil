@@ -10,6 +10,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.DELETE
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -131,6 +132,55 @@ interface ApiMpaz {
 
     @PUT("contenidos/{id}")
     suspend fun actualizarContenido(@Path("id") id: Long, @Body contenido: ContenidoApi): ContenidoApi
+
+    // ---- Evaluaciones (actividades-service y progreso-service) ----
+    @GET("pruebas")
+    suspend fun pruebas(@Query("objetivoId") objetivoId: Long): List<PruebaApi>
+
+    @POST("pruebas")
+    suspend fun crearPrueba(@Body prueba: PruebaApi): PruebaApi
+
+    @GET("preguntas")
+    suspend fun preguntas(@Query("pruebaId") pruebaId: Long): List<PreguntaConAlternativasApi>
+
+    @POST("preguntas")
+    suspend fun crearPregunta(@Body pregunta: PreguntaRequestApi): PreguntaConAlternativasApi
+
+    @PUT("preguntas/{id}")
+    suspend fun actualizarPregunta(
+        @Path("id") id: Long,
+        @Body pregunta: PreguntaRequestApi
+    ): PreguntaConAlternativasApi
+
+    @DELETE("preguntas/{id}")
+    suspend fun eliminarPregunta(@Path("id") id: Long)
+
+    @GET("asignaciones")
+    suspend fun asignaciones(@Query("curso") curso: String?): List<AsignacionApi>
+
+    @POST("asignaciones")
+    suspend fun crearAsignacion(@Body asignacion: AsignacionApi): AsignacionApi
+
+    @POST("asignaciones/{id}/intentos")
+    suspend fun rendirIntento(@Path("id") id: Long, @Body cuerpo: IntentoRequestApi): IntentoApi
+
+    @GET("intentos/{id}")
+    suspend fun revisarIntento(
+        @Path("id") id: Long,
+        @Query("estudianteCodigo") codigo: String
+    ): IntentoRevisionApi
+
+    @GET("progreso/estudiantes/{codigo}/avance")
+    suspend fun avance(@Path("codigo") codigo: String): List<AvanceApi>
+
+    @GET("informes/asignaciones/{id}")
+    suspend fun informe(@Path("id") id: Long): List<InformeApi>
+
+    @GET("observaciones")
+    suspend fun observaciones(@Query("estudianteCodigo") codigo: String): List<ObservacionApi>
+
+    @POST("observaciones")
+    suspend fun crearObservacion(@Body observacion: ObservacionApi): ObservacionApi
 }
 
 // ---- Conexión al gateway ----
