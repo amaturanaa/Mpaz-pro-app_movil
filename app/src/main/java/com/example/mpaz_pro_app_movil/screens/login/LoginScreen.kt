@@ -28,9 +28,19 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.mpaz_pro_app_movil.auth.AutenticacionDemo
 import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
+
+
+// Un emoji para cada perfil.
+// Los emojis se copian de https://unicode.org/emoji/charts/full-emoji-list.html
+private fun emojiDeRol(rol: RolUsuario): String = when (rol) {
+    RolUsuario.ALUMNO -> "🧒"
+    RolUsuario.DOCENTE -> "🍎"
+    RolUsuario.UTP -> "📋"
+}
 
 
 // PANTALLA DE INICIO DE SESIÓN
@@ -145,6 +155,12 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
+        // Emoji grande de bienvenida.
+        Text(
+            text = "🎒",
+            fontSize = 56.sp
+        )
+
         // Título y descripción del acceso a la app.
         Text(
             text = "MPAZ PRO",
@@ -174,7 +190,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
             ) {
 
                 Text(
-                    text = "Iniciar sesión",
+                    text = "🔐 Iniciar sesión",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1C365F)
@@ -203,7 +219,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                             },
                             label = {
                                 Text(
-                                    text = rol.nombreVisible,
+                                    text = "${emojiDeRol(rol)} ${rol.nombreVisible}",
                                     style = MaterialTheme.typography.labelMedium,
                                     maxLines = 1,
                                     softWrap = false
@@ -312,7 +328,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                                 Text("Comprobando...")
                             }
                         } else {
-                            Text("Iniciar sesión")
+                            Text("🚀 Iniciar sesión")
                         }
                     }
                 }
@@ -333,12 +349,12 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Text(
-                    "Cuentas de prueba",
+                    "🧪 Cuentas de prueba",
                     fontWeight = FontWeight.SemiBold
                 )
-                Text("Alumno: estudiante@mpaz.cl / 123456")
-                Text("Docente: docente@mpaz.cl / 123456")
-                Text("UTP: utp@mpaz.cl / 123456")
+                Text("🧒 Alumno: estudiante@mpaz.cl / 123456")
+                Text("🍎 Docente: docente@mpaz.cl / 123456")
+                Text("📋 UTP: utp@mpaz.cl / 123456")
                 Text(
                     "Acceso demostrativo: no usar datos reales.",
                     style = MaterialTheme.typography.bodySmall
