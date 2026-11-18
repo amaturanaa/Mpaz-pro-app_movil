@@ -23,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -355,11 +356,20 @@ fun EstudianteScreen(
                                     Column(modifier = Modifier.fillMaxSize()) {
                                         // Este botón vuelve al listado sin borrar
                                         // el historial de notas ni los intentos.
-                                        TextButton(
+                                        // Óvalo celeste claro con texto azul.
+                                        Button(
                                             onClick = { pruebaSeleccionada = -1 },
-                                            modifier = Modifier.padding(start = 8.dp)
+                                            modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                                            shape = RoundedCornerShape(50),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFDCEEFF),
+                                                contentColor = Color(0xFF2F6FD0)
+                                            )
                                         ) {
-                                            Text("← Volver a mis pruebas")
+                                            Text(
+                                                text = "⬅️ Volver a mis pruebas",
+                                                style = MaterialTheme.typography.titleSmall
+                                            )
                                         }
 
                                         // La prueba ocupa el espacio restante.
@@ -476,11 +486,18 @@ private fun MenuDePruebas(
                                 color = TextoPrincipal
                             )
                         }
-                        Text(
-                            text = "Abrir →",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = TextoPrincipal
-                        )
+                        // Óvalo con el color de la asignatura y solo la palabra Abrir.
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = colores.principal
+                        ) {
+                            Text(
+                                text = "Abrir",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                            )
+                        }
                     }
                 }
             }

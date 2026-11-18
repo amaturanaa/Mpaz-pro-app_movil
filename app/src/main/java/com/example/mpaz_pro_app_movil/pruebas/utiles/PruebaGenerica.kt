@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
+import com.example.mpaz_pro_app_movil.screens.estudiante.iconoDeAsignatura
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -265,7 +266,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 }
 
                 Text(
-                    text = "Mis pruebas",
+                    text = "✏️ Mis pruebas",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -290,18 +291,18 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
-                                    text = config.titulo,
+                                    text = "📝 ${config.titulo}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = azulOscuro
                                 )
                                 Text(
-                                    text = config.subtitulo,
+                                    text = "${iconoDeAsignatura(config.asignatura)} ${config.subtitulo}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = textoSecundario
                                 )
                                 Text(
-                                    text = "${preguntas.size} preguntas · ${preguntas.size} puntos",
+                                    text = "❓ ${preguntas.size} preguntas · ⭐ ${preguntas.size} puntos",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = textoSecundario
                                 )
@@ -324,7 +325,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                         Color(0xFF126B4B) else Color(0xFFB3261E)
                                 )
                                 Text(
-                                    text = "Disponibles",
+                                    text = "🎯 Disponibles",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = textoSecundario
                                 )
@@ -340,7 +341,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Utilizados: $intentosUsados",
+                                text = "✔️ Utilizados: $intentosUsados",
                                 color = textoSecundario,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -362,7 +363,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = azul)
                             ) {
-                                Text(if (intentosRestantes > 0) "Comenzar →" else "Bloqueada")
+                                Text(if (intentosRestantes > 0) "🚀 Comenzar →" else "🔒 Bloqueada")
                             }
                         }
                     }
@@ -371,7 +372,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 // Historial visible incluso cuando la prueba está bloqueada.
                 if (historialNotas.isNotEmpty()) {
                     Text(
-                        text = "Mis notas anteriores",
+                        text = "📊 Mis notas anteriores",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -386,7 +387,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 modifier = Modifier.fillMaxWidth().padding(12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Intento ${indice + 1}")
+                                Text("⭐ Intento ${indice + 1}")
                                 Text(
                                     notaChilena(notaAnterior),
                                     fontWeight = FontWeight.Bold,
@@ -402,12 +403,12 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
             // PANTALLA 1: PREGUNTAS Y ALTERNATIVAS.
             1 -> {
                 Text(
-                    text = config.titulo,
+                    text = "📝 ${config.titulo}",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Intento ${intentosUsados + 1} de $maxIntentos",
+                    text = "🔁 Intento ${intentosUsados + 1} de $maxIntentos",
                     color = textoSecundario
                 )
 
@@ -425,7 +426,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Tu progreso", color = azulOscuro, fontWeight = FontWeight.SemiBold)
+                            Text("🏃 Tu progreso", color = azulOscuro, fontWeight = FontWeight.SemiBold)
                             Text(
                                 "${preguntaActual + 1} de ${preguntas.size}",
                                 color = azulOscuro
@@ -464,7 +465,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "PREGUNTA ${preguntaActual + 1}",
+                            "🤔 PREGUNTA ${preguntaActual + 1}",
                             color = azul,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
@@ -479,7 +480,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 }
 
                 Text(
-                    "Selecciona una alternativa:",
+                    "👉 Selecciona una alternativa:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = textoSecundario
                 )
@@ -530,7 +531,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     OutlinedButton(
                         enabled = preguntaActual > 0,
                         onClick = { preguntaActual-- }
-                    ) { Text("Anterior") }
+                    ) { Text("⬅️ Anterior") }
 
                     Button(
                         // El estudiante no puede continuar sin responder.
@@ -557,7 +558,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = azul)
                     ) {
-                        Text(if (preguntaActual == preguntas.lastIndex) "Finalizar" else "Siguiente")
+                        Text(if (preguntaActual == preguntas.lastIndex) "🏁 Finalizar" else "Siguiente ➡️")
                     }
                 }
             }
@@ -566,7 +567,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
             // PANTALLA 2: NOTA, PUNTAJE Y REVISIÓN DE RESPUESTAS.
             2 -> {
                 Text(
-                    text = "¡Prueba terminada!",
+                    text = "🎉 ¡Prueba terminada!",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -580,23 +581,23 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Tu resultado", color = azulOscuro, fontWeight = FontWeight.SemiBold)
+                        Text("🏆 Tu resultado", color = azulOscuro, fontWeight = FontWeight.SemiBold)
                         Text(
                             notaChilena(nota),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
                             color = azul
                         )
-                        Text("Respuestas correctas: $puntaje de ${preguntas.size}", color = azulOscuro)
+                        Text("✅ Respuestas correctas: $puntaje de ${preguntas.size}", color = azulOscuro)
                         Text(
-                            if (nota >= 4.0) "¡Buen trabajo!" else "¡Sigue practicando!",
+                            if (nota >= 4.0) "🌟 ¡Buen trabajo!" else "💪 ¡Sigue practicando!",
                             color = textoSecundario
                         )
                         HorizontalDivider(color = config.colores.divisor)
-                        Text("Intentos restantes: $intentosRestantes", color = azulOscuro)
+                        Text("🔁 Intentos restantes: $intentosRestantes", color = azulOscuro)
                         if (intentosRestantes == 0) {
                             Text(
-                                "Ya no puedes volver a rendir esta prueba.",
+                                "🔒 Ya no puedes volver a rendir esta prueba.",
                                 color = Color(0xFFB3261E)
                             )
                         }
@@ -611,11 +612,11 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { mostrarRevision = !mostrarRevision }
                     ) {
-                        Text(if (mostrarRevision) "Ocultar respuestas" else "Revisar respuestas")
+                        Text(if (mostrarRevision) "🙈 Ocultar respuestas" else "👀 Revisar respuestas")
                     }
                 } else {
                     Text(
-                        text = "Tu profesor no activó la revisión de respuestas para esta prueba.",
+                        text = "ℹ️ Tu profesor no activó la revisión de respuestas para esta prueba.",
                         style = MaterialTheme.typography.bodySmall,
                         color = textoSecundario
                     )
@@ -637,10 +638,10 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 modifier = Modifier.padding(12.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Text("Pregunta ${indice + 1}: ${pregunta.texto}", fontWeight = FontWeight.Bold)
-                                Text("Tu respuesta: ${pregunta.alternativas[respuestas[indice] ?: 0]}")
-                                Text("Correcta: ${pregunta.alternativas[pregunta.correcta]}")
-                                Text(pregunta.explicacion)
+                                Text("${if (fueCorrecta) "✅" else "❌"} Pregunta ${indice + 1}: ${pregunta.texto}", fontWeight = FontWeight.Bold)
+                                Text("✍️ Tu respuesta: ${pregunta.alternativas[respuestas[indice] ?: 0]}")
+                                Text("🎯 Correcta: ${pregunta.alternativas[pregunta.correcta]}")
+                                Text("💡 ${pregunta.explicacion}")
                             }
                         }
                     }
@@ -651,7 +652,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = azul)
                 ) {
-                    Text("Volver a mis pruebas")
+                    Text("🏠 Volver a mis pruebas")
                 }
             }
         }
