@@ -19,6 +19,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import com.example.mpaz_pro_app_movil.red.RepositorioAsignaciones
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.example.mpaz_pro_app_movil.red.RepositorioObservaciones
+import com.example.mpaz_pro_app_movil.red.RepositorioContenidos
 
 // Resultados reales de una unidad: lo que el estudiante hizo en su prueba.
 data class InformeUnidad(
@@ -40,6 +45,7 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
     init {
         AlmacenMpaz.iniciar(application)
         cargarDesdeBackend()
+        cargarObservaciones()
     }
 
     // El docente solo ve las unidades que la UTP ya publicó.
@@ -48,7 +54,8 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
 
     val asignaciones: List<Asignacion> get() = AlmacenMpaz.asignaciones
 
-    val observaciones: List<Observacion> get() = AlmacenMpaz.observaciones
+    var observaciones: List<Observacion> by mutableStateOf(emptyList())
+        private set
 
     fun unidadPorId(id: Int): Unidad? = AlmacenMpaz.unidades.firstOrNull { it.id == id }
 
@@ -127,24 +134,29 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun agregarObservacion(estudianteId: Int, unidadId: Int, texto: String): String? {
-        if (DatosPrueba.estudiantes.none { it.id == estudianteId }) {
-            return "El estudiante no existe."
-        }
+        val estudiante = DatosPrueba.estudiantes.firstOrNull { it.id == estudianteId }
+            ?: return "El estudiante no existe."
+
         // Bloqueo: solo se comenta una unidad que fue asignada.
         if (AlmacenMpaz.asignaciones.none { it.unidadId == unidadId }) {
             return "Solo se puede comentar una unidad que ya fue asignada."
         }
 
-        AlmacenMpaz.observaciones.add(
-            Observacion(
-                id = (AlmacenMpaz.observaciones.maxOfOrNull { it.id } ?: 0) + 1,
-                estudianteId = estudianteId,
-                unidadId = unidadId,
-                texto = texto.trim(),
-                fecha = Fechas.hoyIso()
-            )
-        )
-        return if (AlmacenMpaz.guardarObservaciones(getApplication())) null else mensajeNoGuardo
+        try {
+            runBlocking(Dispatchers.IO) {
+                RepositorioObservaciones().guardar(estudiante.codigo, unidadId, texto.trim())
+            }
+        } catch (error: Exception) {
+            Log.e("DocenteViewModel", "el backend no aceptó la observación", error)
+            return if (error is HttpException && error.code() == 400) {
+                "El servidor no aceptó la observación. Revisa que la unidad esté asignada."
+            } else {
+                "No se pudo guardar la observación. Revisa la conexión."
+            }
+        }
+
+        cargarObservaciones()
+        return null
     }
 
     fun cargarDesdeBackend() {
@@ -156,6 +168,18 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
                 Log.d("DocenteViewModel", "asignaciones cargadas: ${lista.size}")
             } catch (error: Exception) {
                 Log.e("DocenteViewModel", "no se pudieron cargar las asignaciones", error)
+            }
+        }
+    }
+
+    fun cargarObservaciones() {
+        viewModelScope.launch {
+            try {
+                observaciones = withContext(Dispatchers.IO) {
+                    RepositorioObservaciones().listar(RepositorioContenidos.cargarUnidades())
+                }
+            } catch (error: Exception) {
+                Log.e("DocenteViewModel", "no se pudieron cargar las observaciones", error)
             }
         }
     }
