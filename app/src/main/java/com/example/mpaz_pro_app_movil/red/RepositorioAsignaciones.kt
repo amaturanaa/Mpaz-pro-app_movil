@@ -38,8 +38,8 @@ class RepositorioAsignaciones(private val api: ApiMpaz = RedMpaz.api) {
         return creada.aApp(unidad.id)
     }
 
-    // Todas las asignaciones del servidor, en el modelo de la app.
-    suspend fun todasLasAsignaciones(): List<Asignacion> {
+    // Todas las asignaciones, o solo las de un curso si se indica.
+    suspend fun todasLasAsignaciones(curso: String? = null): List<Asignacion> {
         val unidades = RepositorioContenidos.cargarUnidades()
         val unidadPorObjetivo = unidades.mapNotNull { unidad ->
             api.objetivos(unidad.id.toLong()).firstOrNull()?.id?.let { objetivoId ->
@@ -47,7 +47,7 @@ class RepositorioAsignaciones(private val api: ApiMpaz = RedMpaz.api) {
             }
         }.toMap()
 
-        return api.asignaciones(null).mapNotNull { asignacion ->
+        return api.asignaciones(curso).mapNotNull { asignacion ->
             val unidadId = asignacion.objetivoId?.let { unidadPorObjetivo[it] } ?: return@mapNotNull null
             asignacion.aApp(unidadId)
         }
