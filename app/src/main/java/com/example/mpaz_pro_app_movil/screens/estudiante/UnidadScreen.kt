@@ -67,7 +67,7 @@ fun UnidadScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(asignatura) },
+                title = { Text("${iconoDeAsignatura(asignatura)} $asignatura") },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
                         Icon(
@@ -94,13 +94,13 @@ fun UnidadScreen(
             // Antes estaban en la pantalla principal, mezcladas con todas
             // las asignaturas. Ahora cada una vive dentro de la suya.
             Text(
-                text = "Unidades de esta asignatura",
+                text = "📌 Unidades de esta asignatura",
                 style = MaterialTheme.typography.titleLarge
             )
 
             if (unidades.isEmpty()) {
                 Text(
-                    text = "Tu profesor todavía no te ha asignado unidades de esta asignatura.",
+                    text = "😊 Tu profesor todavía no te ha asignado unidades de esta asignatura.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -118,7 +118,7 @@ fun UnidadScreen(
                     Column(modifier = Modifier.padding(18.dp)) {
                         // Título de la unidad en grande.
                         Text(
-                            text = unidad.titulo,
+                            text = "📘 ${unidad.titulo}",
                             style = MaterialTheme.typography.titleMedium,
                             color = TextoPrincipal
                         )
@@ -130,12 +130,12 @@ fun UnidadScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Curso: ${cursos.joinToString(", ")}",
+                            text = "🏫 Curso: ${cursos.joinToString(", ")}",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextoPrincipal
                         )
                         Text(
-                            text = "Disponible hasta: $fechaHasta",
+                            text = "⏰ Disponible hasta: $fechaHasta",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextoPrincipal
                         )
@@ -144,7 +144,7 @@ fun UnidadScreen(
             }
 
             Text(
-                text = "Para repasar",
+                text = "🧠 Para repasar",
                 style = MaterialTheme.typography.titleLarge
             )
 
@@ -153,7 +153,7 @@ fun UnidadScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Lee y escucha", style = MaterialTheme.typography.titleMedium)
+                    Text("👀 Lee y escucha", style = MaterialTheme.typography.titleMedium)
                     Text(explicacionDe(asignatura), style = MaterialTheme.typography.bodyLarge)
                 }
             }
@@ -163,7 +163,7 @@ fun UnidadScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Ejemplo", style = MaterialTheme.typography.titleMedium)
+                    Text("💡 Ejemplo", style = MaterialTheme.typography.titleMedium)
                     Text(ejemploDe(asignatura), style = MaterialTheme.typography.bodyLarge)
                 }
             }
@@ -185,7 +185,7 @@ fun UnidadScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "Actividad: Exploradores de animales",
+                            "🐾 Actividad: Exploradores de animales",
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
@@ -197,7 +197,7 @@ fun UnidadScreen(
                             onClick = { mostrandoActividadAnimales = true },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Abrir actividad de animales")
+                            Text("📷 Abrir actividad de animales")
                         }
                     }
                 }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mpaz_pro_app_movil.viewmodel.EstudianteViewModel
 import com.example.mpaz_pro_app_movil.viewmodel.PruebaUnidad
@@ -34,6 +35,17 @@ import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.pruebas.PruebaDeUnidad
 import com.example.mpaz_pro_app_movil.pruebas.paletaDeAsignatura
+
+
+// Un emoji para cada asignatura (se ve en las tarjetas y en las listas).
+// Los emojis se copian de https://unicode.org/emoji/charts/full-emoji-list.html
+fun iconoDeAsignatura(asignatura: String): String = when {
+    asignatura.contains("Lenguaje", ignoreCase = true) -> "📖"
+    asignatura.contains("Matem", ignoreCase = true) -> "🔢"
+    asignatura.contains("Ciencias Naturales", ignoreCase = true) -> "🔬"
+    asignatura.contains("Historia", ignoreCase = true) -> "🌎"
+    else -> "📚"
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,7 +86,7 @@ fun EstudianteScreen(
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Menú principal",
+                    text = "🎒 Menú principal",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -82,7 +94,7 @@ fun EstudianteScreen(
 
                 // Opción para ir a las asignaturas.
                 NavigationDrawerItem(
-                    label = { Text("Mis asignaturas") },
+                    label = { Text("📚 Mis asignaturas") },
                     selected = pestana == 0,
                     onClick = {
                         pestana = 0
@@ -94,7 +106,7 @@ fun EstudianteScreen(
 
                 // Opción para ir al listado de pruebas asignadas.
                 NavigationDrawerItem(
-                    label = { Text("Pruebas") },
+                    label = { Text("✏️ Pruebas") },
                     selected = pestana == 1,
                     onClick = {
                         pestana = 1
@@ -106,7 +118,7 @@ fun EstudianteScreen(
 
                 // Opción para ir al avance académico.
                 NavigationDrawerItem(
-                    label = { Text("Mi avance") },
+                    label = { Text("⭐ Mi avance") },
                     selected = pestana == 2,
                     onClick = {
                         pestana = 2
@@ -120,7 +132,7 @@ fun EstudianteScreen(
 
                 // Llama a la función que ya existía para cerrar sesión.
                 NavigationDrawerItem(
-                    label = { Text("Cerrar sesión") },
+                    label = { Text("🚪 Cerrar sesión") },
                     selected = false,
                     onClick = onCerrarSesion,
                     modifier = Modifier.padding(horizontal = 12.dp)
@@ -401,7 +413,7 @@ private fun MenuDePruebas(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Mis pruebas",
+            text = "✏️ Mis pruebas",
             style = MaterialTheme.typography.titleLarge
         )
 
@@ -418,7 +430,7 @@ private fun MenuDePruebas(
             val colores = paletaDeAsignatura(asignatura)
 
             Text(
-                text = asignatura,
+                text = "${iconoDeAsignatura(asignatura)} $asignatura",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -452,7 +464,7 @@ private fun MenuDePruebas(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Prueba: ${prueba.unidad.titulo}",
+                                text = "📝 Prueba: ${prueba.unidad.titulo}",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextoPrincipal
                             )
@@ -514,21 +526,33 @@ fun ContenidoAsignaturas(
             ),
             shape = RoundedCornerShape(18.dp)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Emoji grande de la asignatura.
                 Text(
-                    text = asignatura,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextoPrincipal
+                    text = iconoDeAsignatura(asignatura),
+                    fontSize = 36.sp
                 )
+                Spacer(modifier = Modifier.width(16.dp))
 
-                // Aviso pequeño si hay unidades asignadas en esta asignatura.
-                val cantidad = cantidadUnidades(asignatura)
-                if (cantidad > 0) {
+                Column {
                     Text(
-                        text = if (cantidad == 1) "1 unidad nueva" else "$cantidad unidades nuevas",
-                        style = MaterialTheme.typography.labelLarge,
+                        text = asignatura,
+                        style = MaterialTheme.typography.titleMedium,
                         color = TextoPrincipal
                     )
+
+                    // Aviso pequeño si hay unidades asignadas en esta asignatura.
+                    val cantidad = cantidadUnidades(asignatura)
+                    if (cantidad > 0) {
+                        Text(
+                            text = if (cantidad == 1) "1 unidad nueva" else "$cantidad unidades nuevas",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = TextoPrincipal
+                        )
+                    }
                 }
             }
         }
