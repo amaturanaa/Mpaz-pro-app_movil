@@ -1,5 +1,6 @@
 package com.example.mpaz_pro_app_movil.auth
 
+import android.content.Context
 import android.util.Log
 import com.example.mpaz_pro_app_movil.red.LoginRequest
 import com.example.mpaz_pro_app_movil.red.RedMpaz
@@ -29,7 +30,6 @@ data class UsuarioDemo(
 // Se envía el correo y la clave a POST /auth/login del gateway.
 // El backend devuelve un token (JWT) con el rol dentro; la app lo
 // guarda en Sesion y lo envía en cada petición siguiente.
-// El perfil (Alumno, Docente o UTP) NO se elige: lo decide la cuenta.
 object AutenticacionDemo {
 
     private const val ETIQUETA = "Autenticacion"
@@ -42,10 +42,13 @@ object AutenticacionDemo {
         else -> null
     }
 
-    // Comprueba el correo y la clave en el backend.
-    // Si coinciden, entrega el usuario con el rol de su cuenta; si no, null.
+    // Comprueba el perfil elegido, el correo y la clave en el backend.
+    // Si todo coincide, entrega el usuario válido; si algo está mal, null.
     // Trabaja en segundo plano porque usa la red.
+    @Suppress("UNUSED_PARAMETER")
     suspend fun validar(
+        contexto: Context,
+        rolSeleccionado: RolUsuario,
         usuarioIngresado: String,
         contrasenaIngresada: String
     ): UsuarioDemo? = withContext(Dispatchers.IO) {
@@ -61,9 +64,10 @@ object AutenticacionDemo {
             // Guardamos el token para que las próximas peticiones lo lleven.
             Sesion.token = token
 
-            // El rol sale de la cuenta (viene dentro del token).
             val rolDeLaCuenta = rolDesdeBackend(Sesion.rol)
-            if (rolDeLaCuenta == null) {
+
+            // El perfil elegido tiene que ser el de la cuenta.
+            if (rolDeLaCuenta == null || rolDeLaCuenta != rolSeleccionado) {
                 Sesion.cerrar()
                 return@withContext null
             }

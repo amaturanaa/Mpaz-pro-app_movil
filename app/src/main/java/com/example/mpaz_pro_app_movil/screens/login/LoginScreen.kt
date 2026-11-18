@@ -9,12 +9,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,43 +19,39 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
-import com.example.mpaz_pro_app_movil.R
+import androidx.compose.ui.unit.sp
 import com.example.mpaz_pro_app_movil.auth.AutenticacionDemo
+import com.example.mpaz_pro_app_movil.auth.RolUsuario
 import com.example.mpaz_pro_app_movil.auth.UsuarioDemo
 
 
-// COLORES DEL LOGO DEL COLEGIO (Colegio Escritora Marcela Paz E-764)
-// Celeste del cielo y del agua, y granate del círculo del niño.
-private val CelesteLogo = Color(0xFFD6F3F9)      // fondo de la tarjeta
-private val GranateLogo = Color(0xFFC23251)      // botón
-private val GranateClaro = Color(0xFFE08A9B)     // botón mientras se comprueba
-private val GranateOscuro = Color(0xFF7A1F33)    // títulos
-
-// Tamaño del logo del colegio en la parte de arriba.
-// Si lo quieres más grande o más chico, cambia este número.
-private val TamanoLogo = 120.dp
+// Un emoji para cada perfil.
+// Los emojis se copian de https://unicode.org/emoji/charts/full-emoji-list.html
+private fun emojiDeRol(rol: RolUsuario): String = when (rol) {
+    RolUsuario.ALUMNO -> "🧒"
+    RolUsuario.DOCENTE -> "🍎"
+    RolUsuario.UTP -> "📋"
+}
 
 
 // PANTALLA DE INICIO DE SESIÓN
-// Ya no se elige el perfil: basta con el correo y la contraseña.
-// El backend dice si la cuenta es de Alumno, Docente o UTP, y la app
-// abre la pantalla que corresponde.
 // onIngresar es una función que recibe al usuario
 // autenticado y se lo comunica a MainActivity.
 
 @Composable
 fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
+
+    // Rol que se elige tocando Alumno, Docente o UTP.
+    var rolSeleccionado by remember { mutableStateOf(RolUsuario.ALUMNO) }
 
     // Estos campos se actualizan al escribir en el formulario.
     var usuario by remember { mutableStateOf("") }
@@ -73,13 +65,27 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
     var errorContrasena by remember { mutableStateOf(false) }
     var mensajeError by remember { mutableStateOf<String?>(null) }
 
-    // Para consultar el servidor sin congelar la pantalla.
+    // Para consultar la base de datos sin congelar la pantalla.
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var comprobando by remember { mutableStateOf(false) }
 
+    //COLORES ANIMADOS (animate*AsState)
+    // La tarjeta cambia de color según el rol elegido, así el niño
+    // ve claramente que tocó otra opción. El cambio dura 400 ms.
+    val colorTarjeta by animateColorAsState(
+        targetValue = when (rolSeleccionado) {
+            RolUsuario.ALUMNO -> Color(0xFFCACFEC)   // celeste (el color original)
+            RolUsuario.DOCENTE -> Color(0xFFE8F5E9)  // verde claro
+            RolUsuario.UTP -> Color(0xFFFFF8E1)      // amarillo claro
+        },
+        animationSpec = tween(durationMillis = 400),
+        label = "colorTarjetaLogin"
+    )
+
     // El botón se pone más claro mientras se revisa la contraseña.
     val colorBoton by animateColorAsState(
-        targetValue = if (comprobando) GranateClaro else GranateLogo,
+        targetValue = if (comprobando) Color(0xFF8FAEE0) else Color(0xFF3169C6),
         animationSpec = tween(durationMillis = 250),
         label = "colorBotonLogin"
     )
@@ -110,19 +116,22 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
         if (comprobando) return
         comprobando = true
 
-        // Se envían el correo y la contraseña al servidor.
+        // Buscamos la cuenta en la base de datos local. La contraseña escrita
+        // se cifra y se compara con la cifrada que está guardada.
         // Se hace en segundo plano para no congelar la pantalla.
         scope.launch {
             val cuenta = AutenticacionDemo.validar(
+                contexto = context,
+                rolSeleccionado = rolSeleccionado,
                 usuarioIngresado = usuario,
                 contrasenaIngresada = contrasena
             )
             comprobando = false
 
             if (cuenta == null) {
-                // Credenciales erróneas o sin conexión:
+                // Credenciales erróneas o perfil incorrecto:
                 // NO se permite acceder a ninguna pantalla.
-                mensajeError = "Usuario o contraseña incorrectos."
+                mensajeError = "Perfil, usuario o contraseña incorrectos."
             } else {
                 // Inicio de sesión correcto: avisamos al contenedor.
                 mensajeError = null
@@ -146,25 +155,17 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // Logo del colegio (el archivo está en res/drawable/logo_colegio.png).
-        // Se recorta en círculo; Fit muestra la imagen completa para que
-        // las letras alrededor del logo no se corten.
-        Image(
-            painter = painterResource(id = R.drawable.logo_colegio),
-            contentDescription = "Logo del Colegio Escritora Marcela Paz",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(TamanoLogo)
-                .clip(CircleShape)
-                .background(Color.White)
-                .border(1.dp, Color(0xFFD6DDEA), CircleShape)
+        // Emoji grande de bienvenida.
+        Text(
+            text = "🎒",
+            fontSize = 56.sp
         )
 
         // Título y descripción del acceso a la app.
         Text(
             text = "MPAZ PRO",
             style = MaterialTheme.typography.headlineLarge,
-            color = GranateOscuro,
+            color = Color(0xFF285CB2),
             fontWeight = FontWeight.Bold
         )
 
@@ -179,7 +180,8 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = CelesteLogo
+                // NUEVO: antes era un color fijo; ahora es el color animado.
+                containerColor = colorTarjeta
             )
         ) {
             Column(
@@ -191,12 +193,43 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     text = "🔐 Iniciar sesión",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = GranateOscuro
+                    color = Color(0xFF1C365F)
                 )
 
-                Text("Ingresa con tu correo y tu contraseña")
+                Text("Selecciona tu tipo de usuario")
 
-                // Campo para el nombre de usuario (el correo).
+                // Se crea una opción por cada rol.
+                // Solo una puede quedar seleccionada.
+                // FlowRow: cada botón toma el ancho de su texto y, si no caben
+                // todos en la fila (letra grande del teléfono), el último
+                // pasa a la línea siguiente. Así el texto nunca se parte.
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    RolUsuario.entries.forEach { rol ->
+                        FilterChip(
+                            selected = rolSeleccionado == rol,
+                            onClick = {
+                                // Seleccionamos el perfil y borramos
+                                // mensajes de error anteriores.
+                                rolSeleccionado = rol
+                                mensajeError = null
+                            },
+                            label = {
+                                Text(
+                                    text = "${emojiDeRol(rol)} ${rol.nombreVisible}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // Campo para el nombre de usuario.
                 OutlinedTextField(
                     value = usuario,
                     onValueChange = { nuevoValor ->
@@ -209,7 +242,6 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     singleLine = true,
                     isError = errorUsuario,
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
                     )
                 )
@@ -244,10 +276,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                         TextButton(onClick = {
                             mostrarContrasena = !mostrarContrasena
                         }) {
-                            Text(
-                                text = if (mostrarContrasena) "Ocultar" else "Ver",
-                                color = GranateOscuro
-                            )
+                            Text(if (mostrarContrasena) "Ocultar" else "Ver")
                         }
                     }
                 )
@@ -275,6 +304,7 @@ fun LoginScreen(onIngresar: (UsuarioDemo) -> Unit) {
                     onClick = { intentarIngresar() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
+                        // NUEVO: color animado del botón.
                         containerColor = colorBoton
                     )
                 ) {
