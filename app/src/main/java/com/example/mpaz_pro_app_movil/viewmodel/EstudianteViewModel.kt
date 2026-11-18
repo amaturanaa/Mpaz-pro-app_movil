@@ -27,13 +27,15 @@ data class UnidadAsignada(
     val fechaHasta: String
 )
 
-// UNA PRUEBA QUE EL ALUMNO PUEDE RENDIR
-// Los datos vienen del backend: intentos máximos y usados, y el id de la asignación.
+// UNA PRUEBA QUE EL ALUMNO PUEDE RENDIR, CON SU AVANCE
+// Todo viene del backend: intentos, mejor nota y promedio.
 data class PruebaUnidad(
     val unidad: Unidad,
     val asignacionId: Int,
     val maxIntentos: Int,
-    val intentosUsados: Int
+    val intentosUsados: Int,
+    val mejorNota: Double?,
+    val promedio: Double?
 )
 
 
@@ -99,14 +101,14 @@ class EstudianteViewModel(application: Application) : AndroidViewModel(applicati
                     val unidad = asignadas.firstOrNull { it.unidad.id == asignacion.unidadId }
                         ?.unidad
                         ?: return@mapNotNull null
-                    val usados = avances
-                        .firstOrNull { it.asignacionId == asignacion.id.toLong() }
-                        ?.intentosUsados ?: 0
+                    val avance = avances.firstOrNull { it.asignacionId == asignacion.id.toLong() }
                     PruebaUnidad(
                         unidad = unidad,
                         asignacionId = asignacion.id,
                         maxIntentos = asignacion.maxIntentos,
-                        intentosUsados = usados
+                        intentosUsados = avance?.intentosUsados ?: 0,
+                        mejorNota = avance?.mejorNota,
+                        promedio = avance?.promedio
                     )
                 }
 
