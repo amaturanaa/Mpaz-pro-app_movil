@@ -27,6 +27,7 @@ import com.example.mpaz_pro_app_movil.datos.model.Asignacion
 import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
 import com.example.mpaz_pro_app_movil.notificaciones.Notificador
+import com.example.mpaz_pro_app_movil.screens.estudiante.iconoDeAsignatura
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.validacion.Fechas
 import com.example.mpaz_pro_app_movil.viewmodel.DocenteViewModel
@@ -41,9 +42,8 @@ private data class AvisoAsignacion(
     val fin: String
 )
 
-// =============================================
+
 // PANTALLA DEL DOCENTE
-// =============================================
 // Mismo molde que la de la UTP: menú lateral, barra inferior y pestañas.
 //   0 = Unidades (las que la UTP publicó)
 //   1 = Asignar una unidad a un curso
@@ -58,6 +58,9 @@ fun DocenteScreen(
     var pestana by remember { mutableIntStateOf(0) }
 
     val titulos = listOf("Unidades", "Asignar", "Informes")
+    // Un emoji para cada opción del menú lateral.
+    // Los emojis se copian de https://unicode.org/emoji/charts/full-emoji-list.html
+    val emojis = listOf("📚", "📅", "📊")
     val iconos = listOf(
         Icons.AutoMirrored.Filled.List,
         Icons.Filled.Add,
@@ -102,7 +105,7 @@ fun DocenteScreen(
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Panel del docente",
+                    text = "🍎 Panel del docente",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -110,7 +113,7 @@ fun DocenteScreen(
 
                 titulos.forEachIndexed { posicion, titulo ->
                     NavigationDrawerItem(
-                        label = { Text(titulo) },
+                        label = { Text("${emojis[posicion]} $titulo") },
                         selected = pestana == posicion,
                         onClick = {
                             pestana = posicion
@@ -123,7 +126,7 @@ fun DocenteScreen(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
                 NavigationDrawerItem(
-                    label = { Text("Cerrar sesión") },
+                    label = { Text("🚪 Cerrar sesión") },
                     selected = false,
                     onClick = { onCerrarSesion() },
                     modifier = Modifier.padding(horizontal = 12.dp)
@@ -269,12 +272,12 @@ private fun UnidadesDocente(
     asignacionesDe: (Int) -> List<Asignacion>
 ) {
     if (unidades.isEmpty()) {
-        AvisoPendiente("La UTP todavía no publica ninguna unidad.")
+        AvisoPendiente("📭 La UTP todavía no publica ninguna unidad.")
         return
     }
 
     Text(
-        text = "Unidades publicadas por la UTP",
+        text = "📌 Unidades publicadas por la UTP",
         style = MaterialTheme.typography.titleMedium,
         color = TextoPrincipal
     )
@@ -292,7 +295,7 @@ private fun UnidadesDocente(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = unidad.asignatura,
+                    text = "${iconoDeAsignatura(unidad.asignatura)} ${unidad.asignatura}",
                     style = MaterialTheme.typography.labelLarge,
                     color = AzulPrincipal
                 )
@@ -309,14 +312,14 @@ private fun UnidadesDocente(
 
                 if (asignaciones.isEmpty()) {
                     Text(
-                        text = "Sin asignar a ningún curso.",
+                        text = "⏳ Sin asignar a ningún curso.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextoSecundario
                     )
                 } else {
                     asignaciones.forEach { asignacion ->
                         Text(
-                            text = "Asignada a ${asignacion.curso}: " +
+                            text = "✅ Asignada a ${asignacion.curso}: " +
                                     "${Fechas.aVisible(asignacion.fechaInicio)} al " +
                                     "${Fechas.aVisible(asignacion.fechaFin)} · " +
                                     "${asignacion.maxIntentos} intento(s)" +

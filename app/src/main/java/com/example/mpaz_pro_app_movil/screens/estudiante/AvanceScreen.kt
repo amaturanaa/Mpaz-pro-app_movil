@@ -79,19 +79,19 @@ fun AvanceEstudiante(pruebas: List<PruebaUnidad>) {
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = "Mi avance",
+                    text = "⭐ Mi avance",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = if (promedioGeneral != null) {
-                        "Promedio general: ${Calificacion.formatear(promedioGeneral)}"
+                        "🏆 Promedio general: ${Calificacion.formatear(promedioGeneral)}"
                     } else {
-                        "Todavía no has rendido ninguna prueba."
+                        "🌱 Todavía no has rendido ninguna prueba."
                     },
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "Pruebas rendidas: $pruebasRendidas de ${resumenes.size}",
+                    text = "✅ Pruebas rendidas: $pruebasRendidas de ${resumenes.size}",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -100,7 +100,7 @@ fun AvanceEstudiante(pruebas: List<PruebaUnidad>) {
         // Si el docente todavía no asigna nada, lo explicamos.
         if (resumenes.isEmpty()) {
             Text(
-                text = "Cuando tu profesor te asigne una unidad, aquí verás tu avance.",
+                text = "😊 Cuando tu profesor te asigne una unidad, aquí verás tu avance.",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -141,7 +141,7 @@ private fun TarjetaAvance(resumen: ResumenAvance) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = resumen.asignatura,
+                text = "${iconoDeAsignatura(resumen.asignatura)} ${resumen.asignatura}",
                 style = MaterialTheme.typography.labelMedium,
                 color = colores.secundario
             )
@@ -153,18 +153,18 @@ private fun TarjetaAvance(resumen: ResumenAvance) {
 
             if (mejorNota == null || promedio == null) {
                 Text(
-                    text = "Todavía no has rendido esta prueba.",
+                    text = "📝 Todavía no has rendido esta prueba.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colores.secundario
                 )
             } else {
                 Text(
-                    text = "Mejor nota: ${Calificacion.formatear(mejorNota)}",
+                    text = "🏅 Mejor nota: ${Calificacion.formatear(mejorNota)}",
                     style = MaterialTheme.typography.titleLarge,
                     color = colores.principal
                 )
                 Text(
-                    text = "Promedio: ${Calificacion.formatear(promedio)}",
+                    text = "📊 Promedio: ${Calificacion.formatear(promedio)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colores.secundario
                 )
@@ -177,7 +177,7 @@ private fun TarjetaAvance(resumen: ResumenAvance) {
                 trackColor = colores.barraVacia
             )
             Text(
-                text = "Intentos usados: ${resumen.intentosUsados} de ${resumen.maxIntentos}" +
+                text = "🎯 Intentos usados: ${resumen.intentosUsados} de ${resumen.maxIntentos}" +
                         if (sinIntentos) " (sin intentos disponibles)" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = colores.secundario

@@ -27,17 +27,15 @@ import kotlinx.coroutines.launch
 import com.example.mpaz_pro_app_movil.components.EtiquetaEstado
 import com.example.mpaz_pro_app_movil.components.MensajeError
 import com.example.mpaz_pro_app_movil.datos.model.Unidad
+import com.example.mpaz_pro_app_movil.screens.estudiante.iconoDeAsignatura
 import com.example.mpaz_pro_app_movil.ui.theme.*
 import com.example.mpaz_pro_app_movil.viewmodel.UtpViewModel
 import androidx.compose.animation.AnimatedContent
 import com.example.mpaz_pro_app_movil.components.Transiciones
 
 
-// =============================================
+
 // LAS TRES VISTAS DE LA UTP
-// =============================================
-// AnimatedContent necesita UN solo valor para comparar y saber
-// cuándo cambió la pantalla. Este valor dice cuál se está mostrando:
 //   Lista    -> menú lateral + pestañas (la vista normal)
 //   Detalle  -> revisión de una unidad y sus preguntas
 //   Editando -> formulario para editar una unidad
@@ -159,14 +157,14 @@ fun UtpScreen(
                     drawerContent = {
                         ModalDrawerSheet {
                             Text(
-                                text = "Jefatura UTP",
+                                text = "📋 Jefatura UTP",
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.padding(16.dp)
                             )
                             HorizontalDivider()
 
                             NavigationDrawerItem(
-                                label = { Text("Unidades") },
+                                label = { Text("📚 Unidades") },
                                 selected = pestana == 0,
                                 onClick = {
                                     pestana = 0
@@ -175,7 +173,7 @@ fun UtpScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp)
                             )
                             NavigationDrawerItem(
-                                label = { Text("Nueva unidad") },
+                                label = { Text("➕ Nueva unidad") },
                                 selected = pestana == 1,
                                 onClick = {
                                     pestana = 1
@@ -187,7 +185,7 @@ fun UtpScreen(
                             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
                             NavigationDrawerItem(
-                                label = { Text("Cerrar sesión") },
+                                label = { Text("🚪 Cerrar sesión") },
                                 selected = false,
                                 onClick = { onCerrarSesion() },
                                 modifier = Modifier.padding(horizontal = 12.dp)
@@ -363,7 +361,7 @@ fun ListaUnidadesUtp(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = unidad.asignatura,
+                    text = "${iconoDeAsignatura(unidad.asignatura)} ${unidad.asignatura}",
                     style = MaterialTheme.typography.labelLarge,
                     color = AzulPrincipal
                 )
@@ -390,7 +388,7 @@ fun ListaUnidadesUtp(
                     }
                 } else {
                     Text(
-                        text = "Publicada: para editarla hay que deshabilitarla primero.",
+                        text = "🔒 Publicada: para editarla hay que deshabilitarla primero.",
                         style = MaterialTheme.typography.labelSmall,
                         color = TextoSecundario
                     )
