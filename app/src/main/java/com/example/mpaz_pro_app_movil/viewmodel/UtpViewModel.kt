@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
+import com.example.mpaz_pro_app_movil.red.RepositorioPruebas
 
 
 // VIEWMODEL DEL PERFIL UTP
@@ -40,10 +41,16 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
     fun cargarDesdeBackend() {
         viewModelScope.launch {
             try {
-                val lista = withContext(Dispatchers.IO) { RepositorioContenidos.cargarUnidades() }
+                val (unidades, preguntas) = withContext(Dispatchers.IO) {
+                    val lista = RepositorioContenidos.cargarUnidades()
+                    val repositorio = RepositorioPruebas()
+                    lista to lista.flatMap { repositorio.preguntasDeUnidad(it) }
+                }
                 AlmacenMpaz.unidades.clear()
-                AlmacenMpaz.unidades.addAll(lista)
-                Log.d("UtpViewModel", "unidades cargadas del backend: ${lista.size}")
+                AlmacenMpaz.unidades.addAll(unidades)
+                AlmacenMpaz.preguntas.clear()
+                AlmacenMpaz.preguntas.addAll(preguntas)
+                Log.d("UtpViewModel", "unidades: ${unidades.size}, preguntas: ${preguntas.size}")
             } catch (error: Exception) {
                 Log.e("UtpViewModel", "no se pudieron cargar las unidades del backend", error)
             }
@@ -98,7 +105,14 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
         if (!puedeEditarse(unidad)) {
             return "Una unidad publicada no admite cambios en sus preguntas."
         }
-        AlmacenMpaz.preguntas.add(pregunta)
+        val orden = AlmacenMpaz.preguntas.count { it.unidadId == unidad.id } + 1
+        val creada = try {
+            runBlocking(Dispatchers.IO) { RepositorioPruebas().agregarPregunta(unidad, pregunta, orden) }
+        } catch (error: Exception) {
+            Log.e("UtpViewModel", "el backend no aceptó la pregunta", error)
+            return mensajeDeRed(error, "agregar la pregunta")
+        }
+        AlmacenMpaz.preguntas.add(creada)
         return if (AlmacenMpaz.guardarPreguntas(getApplication())) null else mensajeNoGuardo
     }
 
@@ -108,6 +122,12 @@ class UtpViewModel(application: Application) : AndroidViewModel(application) {
         val unidad = unidadPorId(pregunta.unidadId) ?: return "La unidad ya no existe."
         if (!puedeEditarse(unidad)) {
             return "Una unidad publicada no admite cambios en sus preguntas."
+        }
+        try {
+            runBlocking(Dispatchers.IO) { RepositorioPruebas().eliminarPregunta(preguntaId) }
+        } catch (error: Exception) {
+            Log.e("UtpViewModel", "el backend no aceptó borrar la pregunta", error)
+            return mensajeDeRed(error, "borrar la pregunta")
         }
         AlmacenMpaz.preguntas.remove(pregunta)
         return if (AlmacenMpaz.guardarPreguntas(getApplication())) null else mensajeNoGuardo
