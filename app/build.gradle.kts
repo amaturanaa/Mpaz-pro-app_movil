@@ -22,10 +22,9 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
-            }
+            // Sin optimizar/ofuscar: así Retrofit y Gson funcionan igual
+            // que en el emulador (el recorte de clases los rompe).
+            // La firma se agrega al generar la APK desde Android Studio.
         }
     }
     compileOptions {
