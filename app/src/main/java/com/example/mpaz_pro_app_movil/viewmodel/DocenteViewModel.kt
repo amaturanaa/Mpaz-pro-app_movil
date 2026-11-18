@@ -24,14 +24,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.mpaz_pro_app_movil.red.RepositorioObservaciones
 import com.example.mpaz_pro_app_movil.red.RepositorioContenidos
+import com.example.mpaz_pro_app_movil.red.RepositorioInformes
 
-// Resultados reales de una unidad: lo que el estudiante hizo en su prueba.
+// Una fila del informe: un estudiante en una asignación (curso).
+data class FilaInforme(
+    val estudianteCodigo: String,
+    val curso: String,
+    val intentosUsados: Int,
+    val maxIntentos: Int,
+    val mejorNota: Double?
+)
+
+// Resultados reales de una unidad: lo que hicieron los estudiantes en su prueba.
 data class InformeUnidad(
     val unidad: Unidad,
     val asignaciones: List<Asignacion>,
-    val intentosUsados: Int,
-    val maxIntentos: Int,
-    val notas: List<Double>
+    val filas: List<FilaInforme>
 )
 
 
@@ -116,21 +124,40 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
         return if (AlmacenMpaz.guardarAsignaciones(getApplication())) null else mensajeNoGuardo
     }
 
-    // Informe protegido: solo existe para unidades que ya fueron asignadas.
-    fun informes(): List<InformeUnidad> {
-        val aplicacion = getApplication<Application>()
-        return AlmacenMpaz.asignaciones
-            .groupBy { it.unidadId }
-            .mapNotNull { (unidadId, lista) ->
-                val unidad = unidadPorId(unidadId) ?: return@mapNotNull null
-                InformeUnidad(
-                    unidad = unidad,
-                    asignaciones = lista,
-                    intentosUsados = ConfigPruebas.intentosUsados(aplicacion, unidad.id),
-                    maxIntentos = lista.maxOf { it.maxIntentos },
-                    notas = ConfigPruebas.notas(aplicacion, unidad.id)
-                )
+    // Informes de las unidades asignadas, leídos desde el backend.
+    var informes: List<InformeUnidad> by mutableStateOf(emptyList())
+        private set
+
+    fun cargarInformes() {
+        viewModelScope.launch {
+            try {
+                val asignaciones = AlmacenMpaz.asignaciones.toList()
+                informes = withContext(Dispatchers.IO) {
+                    val unidades = RepositorioContenidos.cargarUnidades()
+                    val repo = RepositorioInformes()
+                    asignaciones
+                        .groupBy { it.unidadId }
+                        .mapNotNull { (unidadId, lista) ->
+                            val unidad = unidades.firstOrNull { it.id == unidadId }
+                                ?: return@mapNotNull null
+                            val filas = lista.flatMap { asignacion ->
+                                repo.informeDeAsignacion(asignacion.id).map { remota ->
+                                    FilaInforme(
+                                        estudianteCodigo = remota.estudianteCodigo.orEmpty(),
+                                        curso = asignacion.curso,
+                                        intentosUsados = remota.intentosUsados ?: 0,
+                                        maxIntentos = asignacion.maxIntentos,
+                                        mejorNota = remota.mejorNota
+                                    )
+                                }
+                            }
+                            InformeUnidad(unidad, lista, filas)
+                        }
+                }
+            } catch (error: Exception) {
+                Log.e("DocenteViewModel", "no se pudieron cargar los informes", error)
             }
+        }
     }
 
     fun agregarObservacion(estudianteId: Int, unidadId: Int, texto: String): String? {

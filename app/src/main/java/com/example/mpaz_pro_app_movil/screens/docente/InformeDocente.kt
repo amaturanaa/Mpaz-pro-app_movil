@@ -83,7 +83,7 @@ fun InformeDocente(
     }
 
     Text(
-        text = "Los resultados son los de la prueba de cada unidad. Corresponden al dispositivo del estudiante de prueba.",
+        text = "Los resultados vienen del servidor: por estudiante y curso, se muestra la mejor nota.",
         style = MaterialTheme.typography.bodySmall,
         color = TextoSecundario
     )
@@ -136,12 +136,9 @@ fun InformeDocente(
     }
 }
 
-// Tarjeta con los resultados de una unidad: intentos, notas y promedio.
+// Tarjeta con los resultados de una unidad: por estudiante, intentos y mejor nota.
 @Composable
 private fun TarjetaInforme(informe: InformeUnidad) {
-    val promedio = Calificacion.promedio(informe.notas)
-    val mejor = informe.notas.maxOrNull()
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -166,35 +163,29 @@ private fun TarjetaInforme(informe: InformeUnidad) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextoSecundario
             )
-            Text(
-                text = "Intentos usados en esta prueba: " +
-                        "${informe.intentosUsados} de ${informe.maxIntentos}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextoPrincipal
-            )
 
-            if (informe.notas.isEmpty()) {
+            if (informe.filas.isEmpty()) {
                 Text(
-                    text = "Aún no hay notas registradas.",
+                    text = "Ningún estudiante ha rendido esta prueba todavía.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextoSecundario
                 )
             } else {
-                informe.notas.forEachIndexed { posicion, nota ->
+                informe.filas.forEach { fila ->
                     Text(
-                        text = "Intento ${posicion + 1}: ${Calificacion.formatear(nota)}",
+                        text = "${fila.estudianteCodigo} · ${fila.curso}: " +
+                                "intentos ${fila.intentosUsados} de ${fila.maxIntentos}",
                         style = MaterialTheme.typography.bodyMedium,
-                        // Verde si aprobó (4,0 o más), rojo si no.
-                        color = if (nota >= 4.0) VerdePrincipal else MaterialTheme.colorScheme.error
-                    )
-                }
-                if (promedio != null && mejor != null) {
-                    Text(
-                        text = "Promedio: ${Calificacion.formatear(promedio)} · " +
-                                "Mejor nota: ${Calificacion.formatear(mejor)}",
-                        style = MaterialTheme.typography.titleSmall,
                         color = TextoPrincipal
                     )
+                    fila.mejorNota?.let { mejor ->
+                        Text(
+                            text = "Mejor nota: ${Calificacion.formatear(mejor)}",
+                            style = MaterialTheme.typography.titleSmall,
+                            // Verde si aprobó (4,0 o más), rojo si no.
+                            color = if (mejor >= 4.0) VerdePrincipal else MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

@@ -246,17 +246,22 @@ fun DocenteScreen(
                                 }
                             )
 
-                            else -> InformeDocente(
-                                informes = viewModel.informes(),
-                                observaciones = viewModel.observaciones,
-                                unidadPorId = { id -> viewModel.unidadPorId(id) },
-                                onAgregarObservacion = { estudianteId, unidadId, texto ->
-                                    viewModel.agregarObservacion(estudianteId, unidadId, texto)
-                                },
-                                onAvisar = { mensaje ->
-                                    scope.launch { snackbarHostState.showSnackbar(mensaje) }
-                                }
-                            )
+                            else -> {
+                                // Al entrar al informe se piden los resultados al servidor.
+                                LaunchedEffect(Unit) { viewModel.cargarInformes() }
+
+                                InformeDocente(
+                                    informes = viewModel.informes,
+                                    observaciones = viewModel.observaciones,
+                                    unidadPorId = { id -> viewModel.unidadPorId(id) },
+                                    onAgregarObservacion = { estudianteId, unidadId, texto ->
+                                        viewModel.agregarObservacion(estudianteId, unidadId, texto)
+                                    },
+                                    onAvisar = { mensaje ->
+                                        scope.launch { snackbarHostState.showSnackbar(mensaje) }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
