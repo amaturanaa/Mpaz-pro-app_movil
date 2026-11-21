@@ -21,6 +21,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Firma de la APK de entrega (archivo mpaz-release.jks en la raíz del proyecto)
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("mpaz-release.jks")
+            storePassword = "mpaz2026"
+            keyAlias = "mpaz"
+            keyPassword = "mpaz2026"
+        }
+    }
+
     buildTypes {
         debug {
             // Mide cuánto código ejecutan las pruebas unitarias (reporte JaCoCo)
@@ -29,7 +39,8 @@ android {
         release {
             // Sin optimizar/ofuscar: así Retrofit y Gson funcionan igual
             // que en el emulador (el recorte de clases los rompe).
-            // La firma se agrega al generar la APK desde Android Studio.
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
