@@ -2,8 +2,10 @@ package com.example.mpaz_pro_app_movil.screens.utp
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -348,7 +350,32 @@ fun ListaUnidadesUtp(
     onAbrir: (Unidad) -> Unit,
     onEditar: (Unidad) -> Unit
 ) {
-    unidades.forEach { unidad ->
+    // Filtro por materia: null = todas.
+    var materia by remember { mutableStateOf<String?>(null) }
+    val materias = unidades.map { it.asignatura }.distinct()
+    val visibles = if (materia == null) unidades else unidades.filter { it.asignatura == materia }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = materia == null,
+            onClick = { materia = null },
+            label = { Text("Todas") }
+        )
+        materias.forEach { nombre ->
+            FilterChip(
+                selected = materia == nombre,
+                onClick = { materia = nombre },
+                label = { Text("${iconoDeAsignatura(nombre)} $nombre") }
+            )
+        }
+    }
+
+    visibles.forEach { unidad ->
         Card(
             modifier = Modifier
                 .fillMaxWidth()

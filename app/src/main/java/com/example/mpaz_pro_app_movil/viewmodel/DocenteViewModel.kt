@@ -189,12 +189,17 @@ class DocenteViewModel(application: Application) : AndroidViewModel(application)
     fun cargarDesdeBackend() {
         viewModelScope.launch {
             try {
-                val lista = withContext(Dispatchers.IO) { RepositorioAsignaciones().todasLasAsignaciones() }
+                val (unidades, lista) = withContext(Dispatchers.IO) {
+                    RepositorioContenidos.cargarUnidades() to
+                            RepositorioAsignaciones().todasLasAsignaciones()
+                }
+                AlmacenMpaz.unidades.clear()
+                AlmacenMpaz.unidades.addAll(unidades)
                 AlmacenMpaz.asignaciones.clear()
                 AlmacenMpaz.asignaciones.addAll(lista)
-                Log.d("DocenteViewModel", "asignaciones cargadas: ${lista.size}")
+                Log.d("DocenteViewModel", "unidades: ${unidades.size}, asignaciones: ${lista.size}")
             } catch (error: Exception) {
-                Log.e("DocenteViewModel", "no se pudieron cargar las asignaciones", error)
+                Log.e("DocenteViewModel", "no se pudieron cargar unidades y asignaciones", error)
             }
         }
     }
