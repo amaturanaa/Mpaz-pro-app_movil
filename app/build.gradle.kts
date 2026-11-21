@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    jacoco
 }
 
 android {
@@ -21,6 +22,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Mide cuánto código ejecutan las pruebas unitarias (reporte JaCoCo)
+            enableUnitTestCoverage = true
+        }
         release {
             // Sin optimizar/ofuscar: así Retrofit y Gson funcionan igual
             // que en el emulador (el recorte de clases los rompe).
@@ -33,6 +38,55 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    testOptions {
+        // En las pruebas unitarias, las llamadas a Log.d / Log.e no hacen nada
+        // en vez de fallar (esas clases solo existen dentro del teléfono).
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+// =============================================
+// REPORTE DE COBERTURA DE LA LÓGICA (IE 3.2.1)
+// =============================================
+// Ejecutar:  .\gradlew.bat jacocoReporteLogica
+// Resultado: app/build/reports/jacoco/jacocoReporteLogica/html/index.html
+// Mide solo la lógica de la app (ViewModels, repositorios, validaciones,
+// autenticación y modelos). Las pantallas y componentes visuales (Compose)
+// no se incluyen porque no son lógica de negocio.
+val jacocoReporteLogica by tasks.registering(JacocoReport::class) {
+    group = "verification"
+    description = "Reporte de cobertura de la lógica (ViewModels y repositorios)."
+    dependsOn("testDebugUnitTest")
+
+    val carpetaBuild = layout.buildDirectory.get().asFile
+
+    executionData.setFrom(
+        fileTree(carpetaBuild) {
+            include("outputs/unit_test_code_coverage/**/*.exec", "jacoco/*.exec")
+        }
+    )
+    classDirectories.setFrom(
+        fileTree("$carpetaBuild/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") {
+            include(
+                "com/example/mpaz_pro_app_movil/viewmodel/**",
+                "com/example/mpaz_pro_app_movil/red/Repositorio*",
+                "com/example/mpaz_pro_app_movil/validacion/**",
+                "com/example/mpaz_pro_app_movil/auth/**",
+                "com/example/mpaz_pro_app_movil/datos/Calificacion*",
+                "com/example/mpaz_pro_app_movil/datos/model/**"
+            )
+        }
+    )
+    sourceDirectories.setFrom(files("src/main/java"))
+
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
     }
 }
 
@@ -50,6 +104,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:1.13.17")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
