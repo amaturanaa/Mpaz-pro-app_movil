@@ -98,10 +98,19 @@ public class IntentoService {
         long correctas = respuestas.stream()
                 .filter(r -> r.alternativaId().equals(correctaPorPregunta.get(r.preguntaId())))
                 .count();
-        BigDecimal fraccion = BigDecimal.valueOf(correctas)
+        BigDecimal porcentaje = BigDecimal.valueOf(correctas)
                 .divide(BigDecimal.valueOf(preguntas.size()), 4, RoundingMode.HALF_UP);
-        BigDecimal nota = BigDecimal.ONE.add(fraccion.multiply(BigDecimal.valueOf(6)))
-                .setScale(1, RoundingMode.HALF_UP);
+        BigDecimal exigencia = new BigDecimal("0.60");
+        BigDecimal nota;
+        if (porcentaje.compareTo(exigencia) <= 0) {
+            nota = BigDecimal.ONE.add(porcentaje.divide(exigencia, 6, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(3)));
+        } else {
+            nota = BigDecimal.valueOf(4).add(porcentaje.subtract(exigencia)
+                    .divide(new BigDecimal("0.40"), 6, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(3)));
+        }
+        nota = nota.setScale(1, RoundingMode.HALF_UP);
 
         Intento intento = new Intento(null, asignacionId, req.estudianteCodigo(),
                 (int) usados + 1, nota, LocalDateTime.now());

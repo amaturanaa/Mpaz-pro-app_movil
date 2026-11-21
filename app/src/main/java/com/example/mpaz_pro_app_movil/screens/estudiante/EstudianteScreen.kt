@@ -73,6 +73,14 @@ fun EstudianteScreen(
     // null = no hay ninguna abierta.
     var unidadAbierta by remember { mutableStateOf<Unidad?>(null) }
 
+    // Cada vez que se vuelve al menú de pruebas (o cambia la pestaña),
+    // se vuelven a pedir los intentos al backend.
+    LaunchedEffect(pestana, pruebaSeleccionada) {
+        if (pruebaSeleccionada == -1) {
+            viewModel.cargarDesdeBackend()
+        }
+    }
+
 
     // Controla si el menú lateral está abierto o cerrado.
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -382,7 +390,7 @@ fun EstudianteScreen(
                                             if (prueba != null) {
                                                 PruebaDeUnidad(
                                                     unidad = prueba.unidad,
-                                                    preguntas = prueba.preguntas
+                                                    asignacionId = prueba.asignacionId
                                                 )
                                             } else {
                                                 Text("Prueba no encontrada")
@@ -412,7 +420,6 @@ private fun MenuDePruebas(
     asignaturas: List<String>,
     onElegirPrueba: (Int) -> Unit
 ) {
-    val context = LocalContext.current
 
     // Columna desplazable SOLO para el menú de selección.
     Column(
@@ -453,9 +460,8 @@ private fun MenuDePruebas(
             }
 
             deEstaAsignatura.forEach { prueba ->
-                val usados = ConfigPruebas.intentosUsados(context, prueba.unidad.id)
-                val maximo = ConfigPruebas.maxIntentos(context, prueba.unidad.id)
-                val cantidad = prueba.preguntas.size
+                val usados = prueba.intentosUsados
+                val maximo = prueba.maxIntentos
 
                 Card(
                     modifier = Modifier
@@ -480,8 +486,7 @@ private fun MenuDePruebas(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = (if (cantidad == 1) "1 pregunta" else "$cantidad preguntas") +
-                                        " · Intentos usados: $usados de $maximo",
+                                text = "Intentos usados: $usados de $maximo",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextoPrincipal
                             )

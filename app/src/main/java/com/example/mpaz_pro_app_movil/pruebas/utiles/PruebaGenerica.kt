@@ -1,7 +1,5 @@
 package com.example.mpaz_pro_app_movil.pruebas.utiles
 
-
-import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,40 +12,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.mpaz_pro_app_movil.datos.ConfigPruebas
-import com.example.mpaz_pro_app_movil.screens.estudiante.iconoDeAsignatura
+import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlin.math.roundToInt
 
 
-// PRUEBA COMPARTIDA POR LAS CUATRO ASIGNATURAS
-
-// MODELO: estructura común para las preguntas de cualquier prueba.
-// 'correcta' es el índice de la alternativa buena:
-// 0 = primera; 1 = segunda; 2 = tercera; 3 = cuarta.
-// 'explicacion' se muestra al revisar las respuestas.
+// PREGUNTA TAL COMO LA VE EL ESTUDIANTE (sin respuesta correcta).
+// preguntaId     -> id de la pregunta en el backend
+// alternativas   -> textos que se muestran
+// alternativaIds -> ids de cada alternativa, en el mismo orden que los textos
 data class PreguntaPrueba(
+    val preguntaId: Long,
     val texto: String,
     val alternativas: List<String>,
-    val correcta: Int,
-    val explicacion: String
+    val alternativaIds: List<Long>
 )
+
+// Lo que devuelve el servidor al enviar un intento.
+data class ResultadoIntento(val intentoId: Long, val nota: Double)
 
 
 // PALETA DE COLORES DE UNA PRUEBA
-// Cada prueba usa una versión SUAVE del color de su asignatura
-// los mismos de las tarjetas de "Mis asignaturas":
-// Lenguaje = rosado, Matemáticas = azul, Ciencias = verde, Historia = amarillo.
-// fondo      -> tarjetas grandes (inicio, pregunta, resultado)
-// principal  -> botones, barra de progreso, nota y alternativa elegida
-// oscuro     -> títulos y textos importantes sobre el fondo
-// secundario -> textos pequeños grises
-// seleccion  -> fondo de la alternativa que el niño eligió
-// divisor    -> línea delgada dentro de las tarjetas
-// barraVacia -> barritas de progreso que todavía no se completan
 data class ColoresPrueba(
     val fondo: Color,
     val principal: Color,
@@ -58,9 +44,6 @@ data class ColoresPrueba(
     val barraVacia: Color
 )
 
-
-// Los colores "principal" son lo bastante oscuros para que el texto
-// blanco de los botones se lea bien.
 object PaletasPrueba {
     val lenguaje = ColoresPrueba(
         fondo = Color(0xFFFFEEF3),
@@ -100,144 +83,63 @@ object PaletasPrueba {
     )
 }
 
+
+// CONFIGURACIÓN DE UNA PRUEBA
+// Todo lo que la pantalla necesita viene del backend (a través de PruebaDeUnidad).
+// maxIntentos / intentosUsados / mejorNota -> datos de la asignación y del avance
+// permiteRevisar                            -> lo decidió el docente al asignar
+// alEnviar  -> envía las respuestas (preguntaId -> alternativaId) y devuelve el resultado
+// alRevisar -> devuelve, para cada preguntaId, si la respuesta del alumno fue correcta
 data class ConfiguracionPrueba(
     val titulo: String,
     val subtitulo: String,
     val asignatura: String,
-    val archivo: String,
     val preguntas: List<PreguntaPrueba>,
-    val archivoAntiguo: String? = null,
-    // NUEVO (colores): si una prueba no dice nada, queda azul como antes.
-    val colores: ColoresPrueba = PaletasPrueba.matematicas
+    val colores: ColoresPrueba = PaletasPrueba.matematicas,
+    val maxIntentos: Int,
+    val intentosUsados: Int,
+    val mejorNota: Double?,
+    val permiteRevisar: Boolean,
+    val alEnviar: suspend (Map<Long, Long>) -> ResultadoIntento,
+    val alRevisar: suspend (Long) -> Map<Long, Boolean>
 )
 
 
 // PANTALLA COMPARTIDA DE LAS PRUEBAS
-// Recibe la configuración de UNA prueba y dibuja sus tres pantallas:
-// inicio con historial, preguntas y resultado.
+// Dibuja tres pantallas: inicio, preguntas y resultado.
+// La nota y el número de intentos los calcula y guarda el backend.
 @Composable
 fun PruebaGenerica(config: ConfiguracionPrueba) {
-    // El contexto permite acceder al almacenamiento de esta app.
-    val context = LocalContext.current
-
-    // Cada asignatura usa un archivo DISTINTO de SharedPreferences.
-    // Se mantienen las mismas claves de la versión anterior para
-    // NO borrar el historial de notas ni los intentos ya utilizados.
-    val preferencias = remember(context) {
-        context.getSharedPreferences(config.archivo, Context.MODE_PRIVATE)
-    }
-
-    // COMPATIBILIDAD CON VERSIONES ANTERIORES (solo Lenguaje):
-    // Una versión antigua guardaba los intentos en otro archivo
-    // (config.archivoAntiguo). Si todavía existen datos ahí y
-    // NO tenemos datos en el almacenamiento actual, los copiamos.
-    // Así no se pierden los intentos ni las notas ya conseguidas.
-    remember(preferencias, config.archivoAntiguo) {
-        val nombreAntiguo = config.archivoAntiguo
-        if (nombreAntiguo != null) {
-            val preferenciasAntiguas =
-                context.getSharedPreferences(nombreAntiguo, Context.MODE_PRIVATE)
-            val editor = preferencias.edit()
-            var necesitaGuardar = false
-            if (!preferencias.contains("intentos_usados") &&
-                preferenciasAntiguas.contains("intentos_usados")) {
-                editor.putInt(
-                    "intentos_usados",
-                    preferenciasAntiguas.getInt("intentos_usados", 0)
-                )
-                necesitaGuardar = true
-            }
-            if (!preferencias.contains("historial_notas") &&
-                preferenciasAntiguas.contains("historial_notas")) {
-                editor.putString(
-                    "historial_notas",
-                    preferenciasAntiguas.getString("historial_notas", "").orEmpty()
-                )
-                necesitaGuardar = true
-            }
-            if (necesitaGuardar) editor.apply()
-        }
-        true
-    }
-
-    // Máximo permitido, por defecto tres. El docente lo cambia
-    // al asignar una unidad (ConfigPruebas.guardarMaxIntentos).
-    var maxIntentos by remember(preferencias) {
-        mutableIntStateOf(preferencias.getInt("max_intentos", 3).coerceIn(1, 3))
-    }
-
-    // Recuperamos el número de intentos FINALIZADOS.
-    var intentosUsados by remember(preferencias) {
-        mutableIntStateOf(preferencias.getInt("intentos_usados", 0))
-    }
-
-    // Recuperamos las notas separadas por punto y coma.
-    // mutableStateListOf actualiza automáticamente la pantalla.
-    val historialNotas = remember(preferencias) {
-        mutableStateListOf<Double>().apply {
-            val textoGuardado = preferencias.getString("historial_notas", "").orEmpty()
-            textoGuardado.split(";").forEach { texto ->
-                texto.toDoubleOrNull()?.let { add(it) }
-            }
-        }
-    }
-
-    // El banco de preguntas llega desde cada prueba.
+    val scope = rememberCoroutineScope()
     val preguntas = config.preguntas
 
-    // Control de pantalla:
-    // 0 = tarjeta con información, 1 = cuestionario, 2 = resultado.
-    var pantalla by remember { mutableIntStateOf(0) }
+    var intentosUsados by remember(config) { mutableIntStateOf(config.intentosUsados) }
+    var mejorNota by remember(config) { mutableStateOf(config.mejorNota) }
+    val intentosRestantes = (config.maxIntentos - intentosUsados).coerceAtLeast(0)
 
-    // La primera pregunta ocupa el índice cero.
+    // 0 = inicio, 1 = cuestionario, 2 = resultado.
+    var pantalla by remember { mutableIntStateOf(0) }
     var preguntaActual by remember { mutableIntStateOf(0) }
 
-    // Respuestas seleccionadas, una por pregunta.
-    // null significa que el estudiante aún no ha respondido.
-    val respuestas = remember {
-        mutableStateListOf<Int?>().apply {
-            repeat(preguntas.size) { add(null) }
-        }
+    // Respuestas elegidas: índice de alternativa por pregunta, null si no respondió.
+    val respuestas = remember(config) {
+        mutableStateListOf<Int?>().apply { repeat(preguntas.size) { add(null) } }
     }
 
-    // Permite mostrar u ocultar la revisión en la pantalla de resultado.
+    var enviando by remember { mutableStateOf(false) }
+    var errorEnvio by remember { mutableStateOf<String?>(null) }
+    var resultado by remember { mutableStateOf<ResultadoIntento?>(null) }
+
+    // preguntaId -> acertó. null mientras no se ha pedido la revisión.
+    var aciertos by remember { mutableStateOf<Map<Long, Boolean>?>(null) }
     var mostrarRevision by remember { mutableStateOf(false) }
+    var revisando by remember { mutableStateOf(false) }
+    var errorRevision by remember { mutableStateOf<String?>(null) }
 
-    // NUEVO (tarea 4): ¿el docente permite revisar las respuestas?
-    // Lo decide el Checkbox "Permitir ver respuestas" al asignar la unidad.
-    // Se lee una vez cada vez que se abre la prueba. Si el docente
-    // nunca lo configuró, ConfigPruebas responde true (sí se permite).
-    val puedeVerRespuestas = remember(context) {
-        ConfigPruebas.verRespuestasPermitido(context, config.archivo)
-    }
-
-    // Nunca mostramos intentos restantes negativos.
-    val intentosRestantes = (maxIntentos - intentosUsados).coerceAtLeast(0)
-
-    // Calculamos cuántas respuestas son correctas.
-    val puntaje = preguntas.indices.count { indice ->
-        respuestas[indice] == preguntas[indice].correcta
-    }
-
-    // Proporción de aciertos: 3 / 5 = 0.60 = 60 %.
-    val porcentaje = puntaje.toDouble() / preguntas.size
-
-    // Escala referencial chilena 1,0 a 7,0 con 60 % de exigencia.
-    // Tres respuestas correctas de cinco equivalen a un 4,0.
-    val notaSinRedondear = if (porcentaje <= 0.60) {
-        1.0 + (porcentaje / 0.60) * 3.0
-    } else {
-        4.0 + ((porcentaje - 0.60) / 0.40) * 3.0
-    }
-    val nota = (notaSinRedondear * 10).roundToInt() / 10.0
-
-    // La nota se muestra con coma decimal: 5,5 en vez de 5.5.
     fun notaChilena(valor: Double): String = String.format(
         Locale.forLanguageTag("es-CL"), "%.1f", valor
     )
 
-    // la paleta ahora llega desde cada prueba.
-    // Se dejaron los mismos nombres de antes (azul, azulPastel...)
     val azulOscuro = config.colores.oscuro
     val azul = config.colores.principal
     val azulPastel = config.colores.fondo
@@ -245,8 +147,59 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
     val verdeSuave = Color(0xFFD5F3E7)
     val rojoSuave = Color(0xFFFFDFDF)
 
-    // Esta columna puede desplazarse y ocupa el espacio que le
-    // entrega EstudianteScreen, sin necesitar una altura especial.
+    fun enviar() {
+        if (enviando || intentosRestantes <= 0) return
+        if (respuestas.any { it == null }) {
+            errorEnvio = "Responde todas las preguntas antes de finalizar."
+            return
+        }
+        val envio = preguntas.indices.associate { indice ->
+            preguntas[indice].preguntaId to preguntas[indice].alternativaIds[respuestas[indice]!!]
+        }
+
+        enviando = true
+        errorEnvio = null
+        scope.launch {
+            try {
+                val recibido = config.alEnviar(envio)
+                resultado = recibido
+                intentosUsados++
+                mejorNota = maxOf(mejorNota ?: recibido.nota, recibido.nota)
+                aciertos = null
+                mostrarRevision = false
+                pantalla = 2
+            } catch (error: Exception) {
+                errorEnvio = "No se pudo enviar la prueba. Revisa la conexión e inténtalo de nuevo."
+            } finally {
+                enviando = false
+            }
+        }
+    }
+
+    fun alternarRevision() {
+        if (mostrarRevision) {
+            mostrarRevision = false
+            return
+        }
+        if (aciertos != null) {
+            mostrarRevision = true
+            return
+        }
+        val intento = resultado ?: return
+        revisando = true
+        errorRevision = null
+        scope.launch {
+            try {
+                aciertos = config.alRevisar(intento.intentoId)
+                mostrarRevision = true
+            } catch (error: Exception) {
+                errorRevision = "No se pudo cargar la revisión. Inténtalo de nuevo."
+            } finally {
+                revisando = false
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -256,22 +209,14 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
     ) {
         when (pantalla) {
 
-
-            // PANTALLA 0: TARJETA DE INICIO E HISTORIAL DE NOTAS.
+            // PANTALLA 0: INICIO
             0 -> {
-                // Leemos nuevamente el valor si el profesor lo cambió
-                // antes de entrar a esta pantalla de prueba.
-                LaunchedEffect(Unit) {
-                    maxIntentos = preferencias.getInt("max_intentos", 3).coerceIn(1, 3)
-                }
-
                 Text(
-                    text = "✏️ Mis pruebas",
+                    text = "Mis pruebas",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
-                // Tarjeta de color: título a la izquierda, intentos a la derecha.
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -291,41 +236,40 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 Text(
-                                    text = "📝 ${config.titulo}",
+                                    text = config.titulo,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = azulOscuro
                                 )
                                 Text(
-                                    text = "${iconoDeAsignatura(config.asignatura)} ${config.subtitulo}",
+                                    text = config.subtitulo,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = textoSecundario
                                 )
                                 Text(
-                                    text = "❓ ${preguntas.size} preguntas · ⭐ ${preguntas.size} puntos",
+                                    text = "${preguntas.size} preguntas · ${preguntas.size} puntos",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = textoSecundario
                                 )
                             }
 
-                            // Etiqueta verde si quedan intentos, roja si no.
                             Column(
                                 modifier = Modifier
                                     .background(
-                                        if (intentosRestantes > 0) verdeSuave else rojoSuave,
+                                        if (intentosRestantes > 0) Color(0xFFD5F3E7) else Color(0xFFFFDFDF),
                                         RoundedCornerShape(12.dp)
                                     )
                                     .padding(horizontal = 12.dp, vertical = 9.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "$intentosRestantes de $maxIntentos",
+                                    text = "$intentosRestantes de ${config.maxIntentos}",
                                     fontWeight = FontWeight.Bold,
                                     color = if (intentosRestantes > 0)
                                         Color(0xFF126B4B) else Color(0xFFB3261E)
                                 )
                                 Text(
-                                    text = "🎯 Disponibles",
+                                    text = "Disponibles",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = textoSecundario
                                 )
@@ -334,85 +278,59 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
 
                         HorizontalDivider(color = config.colores.divisor)
 
-                        // Estado a la izquierda y botón principal a la derecha.
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "✔️ Utilizados: $intentosUsados",
+                                text = "Utilizados: $intentosUsados",
                                 color = textoSecundario,
                                 style = MaterialTheme.typography.bodySmall
                             )
 
                             Button(
-                                // El bloqueo es real: no se inicia si ya
-                                // se consumieron todos los intentos.
-                                enabled = intentosRestantes > 0,
+                                enabled = intentosRestantes > 0 && preguntas.isNotEmpty(),
                                 onClick = {
                                     preguntaActual = 0
+                                    respuestas.indices.forEach { respuestas[it] = null }
+                                    resultado = null
+                                    aciertos = null
                                     mostrarRevision = false
-                                    // Limpiamos respuestas del intento anterior,
-                                    // PERO NO borramos notas ni intentos.
-                                    respuestas.indices.forEach { indice ->
-                                        respuestas[indice] = null
-                                    }
+                                    errorEnvio = null
                                     pantalla = 1
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = azul)
                             ) {
-                                Text(if (intentosRestantes > 0) "🚀 Comenzar →" else "🔒 Bloqueada")
+                                Text(if (intentosRestantes > 0) "Comenzar →" else "Bloqueada")
                             }
                         }
                     }
                 }
 
-                // Historial visible incluso cuando la prueba está bloqueada.
-                if (historialNotas.isNotEmpty()) {
+                mejorNota?.let { mejor ->
                     Text(
-                        text = "📊 Mis notas anteriores",
+                        text = "Mejor nota: ${notaChilena(mejor)}",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = azul
                     )
-                    historialNotas.forEachIndexed { indice, notaAnterior ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("⭐ Intento ${indice + 1}")
-                                Text(
-                                    notaChilena(notaAnterior),
-                                    fontWeight = FontWeight.Bold,
-                                    color = azul
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
-
-            // PANTALLA 1: PREGUNTAS Y ALTERNATIVAS.
+            // PANTALLA 1: PREGUNTAS
             1 -> {
                 Text(
-                    text = "📝 ${config.titulo}",
+                    text = config.titulo,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "🔁 Intento ${intentosUsados + 1} de $maxIntentos",
+                    text = "Intento ${intentosUsados + 1} de ${config.maxIntentos}",
                     color = textoSecundario
                 )
 
-                // Tarjeta del progreso: número actual y cinco barritas.
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = azulPastel),
@@ -426,14 +344,10 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("🏃 Tu progreso", color = azulOscuro, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "${preguntaActual + 1} de ${preguntas.size}",
-                                color = azulOscuro
-                            )
+                            Text("Tu progreso", color = azulOscuro, fontWeight = FontWeight.SemiBold)
+                            Text("${preguntaActual + 1} de ${preguntas.size}", color = azulOscuro)
                         }
 
-                        // Una barra por pregunta, sin bibliotecas adicionales.
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -453,7 +367,6 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     }
                 }
 
-                // Recuadro de la pregunta actual.
                 val pregunta = preguntas[preguntaActual]
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -465,7 +378,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "🤔 PREGUNTA ${preguntaActual + 1}",
+                            "PREGUNTA ${preguntaActual + 1}",
                             color = azul,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
@@ -480,12 +393,11 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                 }
 
                 Text(
-                    "👉 Selecciona una alternativa:",
+                    "Selecciona una alternativa:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = textoSecundario
                 )
 
-                // Cada alternativa es una tarjeta completa y seleccionable.
                 pregunta.alternativas.forEachIndexed { indice, alternativa ->
                     val seleccionada = respuestas[preguntaActual] == indice
                     Card(
@@ -523,114 +435,123 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     }
                 }
 
-                // Navegación entre las cinco preguntas.
+                errorEnvio?.let {
+                    Text(it, color = Color(0xFFB3261E), style = MaterialTheme.typography.bodySmall)
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
-                        enabled = preguntaActual > 0,
+                        enabled = preguntaActual > 0 && !enviando,
                         onClick = { preguntaActual-- }
-                    ) { Text("⬅️ Anterior") }
+                    ) { Text("Anterior") }
 
                     Button(
-                        // El estudiante no puede continuar sin responder.
-                        enabled = respuestas[preguntaActual] != null,
+                        enabled = respuestas[preguntaActual] != null && !enviando,
                         onClick = {
                             if (preguntaActual < preguntas.lastIndex) {
-                                // Avanza sin perder la selección anterior.
                                 preguntaActual++
-                            } else if (intentosUsados < maxIntentos) {
-                                // Finalizar consume UN intento, no cada pregunta.
-                                intentosUsados++
-                                historialNotas.add(nota)
-
-                                // Guardamos con las MISMAS claves antiguas
-                                // para preservar el historial existente.
-                                preferencias.edit()
-                                    .putInt("intentos_usados", intentosUsados)
-                                    .putString("historial_notas", historialNotas.joinToString(";"))
-                                    .apply()
-
-                                mostrarRevision = false
-                                pantalla = 2
+                            } else {
+                                enviar()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = azul)
                     ) {
-                        Text(if (preguntaActual == preguntas.lastIndex) "🏁 Finalizar" else "Siguiente ➡️")
+                        if (enviando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Text(if (preguntaActual == preguntas.lastIndex) "Finalizar" else "Siguiente")
+                        }
                     }
                 }
             }
 
-
-            // PANTALLA 2: NOTA, PUNTAJE Y REVISIÓN DE RESPUESTAS.
+            // PANTALLA 2: RESULTADO Y REVISIÓN
             2 -> {
+                val recibido = resultado
+
                 Text(
-                    text = "🎉 ¡Prueba terminada!",
+                    text = "¡Prueba terminada!",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = azulPastel)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                if (recibido != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = azulPastel)
                     ) {
-                        Text("🏆 Tu resultado", color = azulOscuro, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            notaChilena(nota),
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = azul
-                        )
-                        Text("✅ Respuestas correctas: $puntaje de ${preguntas.size}", color = azulOscuro)
-                        Text(
-                            if (nota >= 4.0) "🌟 ¡Buen trabajo!" else "💪 ¡Sigue practicando!",
-                            color = textoSecundario
-                        )
-                        HorizontalDivider(color = config.colores.divisor)
-                        Text("🔁 Intentos restantes: $intentosRestantes", color = azulOscuro)
-                        if (intentosRestantes == 0) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text("Tu resultado", color = azulOscuro, fontWeight = FontWeight.SemiBold)
                             Text(
-                                "🔒 Ya no puedes volver a rendir esta prueba.",
-                                color = Color(0xFFB3261E)
+                                notaChilena(recibido.nota),
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = azul
                             )
+                            Text(
+                                if (recibido.nota >= 4.0) "¡Buen trabajo!" else "¡Sigue practicando!",
+                                color = textoSecundario
+                            )
+                            HorizontalDivider(color = config.colores.divisor)
+                            Text("Intentos restantes: $intentosRestantes", color = azulOscuro)
+                            if (intentosRestantes == 0) {
+                                Text(
+                                    "Ya no puedes volver a rendir esta prueba.",
+                                    color = Color(0xFFB3261E)
+                                )
+                            }
                         }
                     }
+                } else {
+                    Text("No hay resultado para mostrar.", color = textoSecundario)
                 }
 
-                // el botón solo aparece si el docente lo permite.
-                // Si no, mostramos un aviso para que el niño sepa por qué no está.
-                if (puedeVerRespuestas) {
-                    // Revisión con retroalimentación educativa, opcional.
+                if (config.permiteRevisar) {
                     OutlinedButton(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { mostrarRevision = !mostrarRevision }
+                        enabled = !revisando && resultado != null,
+                        onClick = { alternarRevision() }
                     ) {
-                        Text(if (mostrarRevision) "🙈 Ocultar respuestas" else "👀 Revisar respuestas")
+                        Text(
+                            when {
+                                revisando -> "Cargando revisión..."
+                                mostrarRevision -> "Ocultar respuestas"
+                                else -> "Revisar respuestas"
+                            }
+                        )
+                    }
+                    errorRevision?.let {
+                        Text(it, color = Color(0xFFB3261E), style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
                     Text(
-                        text = "ℹ️ Tu profesor no activó la revisión de respuestas para esta prueba.",
+                        text = "Tu profesor no activó la revisión de respuestas para esta prueba.",
                         style = MaterialTheme.typography.bodySmall,
                         color = textoSecundario
                     )
                 }
 
-                // doble seguro, la revisión tampoco se dibuja
-                // si no está permitida.
-                if (mostrarRevision && puedeVerRespuestas) {
+                if (mostrarRevision && config.permiteRevisar) {
+                    val marcas = aciertos.orEmpty()
                     preguntas.forEachIndexed { indice, pregunta ->
-                        val fueCorrecta = respuestas[indice] == pregunta.correcta
+                        val acerto = marcas[pregunta.preguntaId] == true
+                        val elegida = respuestas[indice]
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (fueCorrecta) verdeSuave else rojoSuave
+                                containerColor = if (acerto) verdeSuave else rojoSuave
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -638,10 +559,14 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                                 modifier = Modifier.padding(12.dp),
                                 verticalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Text("${if (fueCorrecta) "✅" else "❌"} Pregunta ${indice + 1}: ${pregunta.texto}", fontWeight = FontWeight.Bold)
-                                Text("✍️ Tu respuesta: ${pregunta.alternativas[respuestas[indice] ?: 0]}")
-                                Text("🎯 Correcta: ${pregunta.alternativas[pregunta.correcta]}")
-                                Text("💡 ${pregunta.explicacion}")
+                                Text(
+                                    "Pregunta ${indice + 1}: ${pregunta.texto}",
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    "Tu respuesta: ${elegida?.let { pregunta.alternativas[it] } ?: "Sin responder"}"
+                                )
+                                Text(if (acerto) "Respondiste bien" else "Respondiste mal")
                             }
                         }
                     }
@@ -652,7 +577,7 @@ fun PruebaGenerica(config: ConfiguracionPrueba) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = azul)
                 ) {
-                    Text("🏠 Volver a mis pruebas")
+                    Text("Volver a mis pruebas")
                 }
             }
         }
