@@ -441,6 +441,14 @@ raíz del repositorio. La firma está configurada en `app/build.gradle.kts`
 | Alias | `mpaz` |
 | Contraseña del keystore y de la llave | `mpaz2026` |
 
+**Captura del `.jks` en la raíz del repositorio:**
+
+![Llave de firma mpaz-release.jks](docs/firma-jks.png)
+
+**Captura de la APK firmada en `app/release`:**
+
+![APK firmada app-release.apk](docs/firma-apk.png)
+
 La APK firmada está en `app/release/app-release.apk`. Para generarla de nuevo:
 
 ```powershell
