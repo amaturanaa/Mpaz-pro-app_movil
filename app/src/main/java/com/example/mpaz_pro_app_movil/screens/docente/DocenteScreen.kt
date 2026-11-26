@@ -55,6 +55,15 @@ fun DocenteScreen(
     onCerrarSesion: () -> Unit,
     viewModel: DocenteViewModel = viewModel()
 ) {
+
+    // Cada vez que se entra al perfil docente (por ejemplo, al volver a iniciar
+    // sesión), se piden de nuevo las unidades, asignaciones y observaciones al
+    // backend. Así los cambios hechos desde otro lugar aparecen sin reiniciar la app.
+    LaunchedEffect(Unit) {
+        viewModel.cargarDesdeBackend()
+        viewModel.cargarObservaciones()
+    }
+
     var pestana by remember { mutableIntStateOf(0) }
 
     val titulos = listOf("Unidades", "Asignar", "Informes")
