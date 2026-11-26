@@ -62,6 +62,13 @@ fun UtpScreen(
     viewModel: UtpViewModel = viewModel()
 ) {
 
+    // Cada vez que se entra al perfil UTP (por ejemplo, al volver a iniciar
+    // sesión), se piden de nuevo las unidades al backend. Así los cambios
+    // hechos desde otro lugar (Postman, otro perfil) aparecen sin reiniciar la app.
+    LaunchedEffect(Unit) {
+        viewModel.cargarDesdeBackend()
+    }
+
     // 0 = lista de unidades, 1 = nueva unidad
     var pestana by remember { mutableIntStateOf(0) }
 
