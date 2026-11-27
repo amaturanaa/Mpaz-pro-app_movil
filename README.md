@@ -496,6 +496,18 @@ ficticios. No se utilizan nombres, RUT ni credenciales reales de estudiantes o
 de la institución. La aplicación no se conecta con sistemas del colegio ni
 genera diagnósticos automáticos con inteligencia artificial.
 
-## Control de versiones
+## Control de versiones y planificación
 
 - Repositorio: https://github.com/amaturanaa/Mpaz-pro-app_movil
+- Tablero Trello: https://trello.com/b/lSow9Qaa/mapaz
+
+La planificación del proyecto se llevó en Trello, con las tareas repartidas
+entre los integrantes (AM: Alejandro Maturana, SM: Sofía Mellado). El código
+se versionó en GitHub, con commits de ambos integrantes en la aplicación móvil
+y en los microservicios.
+
+![Tablero de Trello del proyecto (1)](docs/trello-1.png)
+
+![Tablero de Trello del proyecto (2)](docs/trello-2.png)
+
+![Tablero de Trello del proyecto (3)](docs/trello-3.png)
